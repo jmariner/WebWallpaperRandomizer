@@ -1,0 +1,119 @@
+{
+	"file": "index.html",
+	"general": {
+		"properties": {
+			"api_key": {
+				"order": 100,
+				"text": "API Key",
+				"type": "textinput",
+				"value": ""
+			},
+			"search_queries": {
+				"order": 101,
+				"text": "Search Queries",
+				"type": "textinput",
+				"value": "id:41598, id:17524"
+			},
+			"loading_buffer_sec": {
+				"order": 150,
+				"text": "Loading Buffer (s)",
+				"type": "slider",
+				"min": 0,
+				"max": 300,
+				"value": 5
+			},
+			"image_sizing": {
+				"order": 200,
+				"text": "Image Sizing",
+				"type": "combo",
+				"value": "black-bars",
+				"options": [
+					{
+						"label": "Black Bars",
+						"value": "black-bars"
+					},
+					{
+						"label": "Zoom/Crop",
+						"value": "zoom-crop"
+					}
+				]
+			},
+			"image_blur_sides": {
+				"condition": "image_sizing.value === \"black-bars\"",
+				"order": 201,
+				"text": "Blur Image Sides",
+				"type": "bool",
+				"value": true
+			},
+			"image_position": {
+				"order": 203,
+				"text": "Image Position",
+				"type": "combo",
+				"value": "center-center",
+				"options": [
+					{
+						"label": "Top/Left",
+						"value": "top-left"
+					},
+					{
+						"label": "Top/Center",
+						"value": "top-center"
+					},
+					{
+						"label": "Top/Right",
+						"value": "top-right"
+					},
+					{
+						"label": "Center/Left",
+						"value": "center-left"
+					},
+					{
+						"label": "Center/Center",
+						"value": "center-center"
+					},
+					{
+						"label": "Center/Right",
+						"value": "center-right"
+					},
+					{
+						"label": "Bottom/Left",
+						"value": "bottom-left"
+					},
+					{
+						"label": "Bottom/Center",
+						"value": "bottom-center"
+					},
+					{
+						"label": "Bottom/Right",
+						"value": "bottom-right"
+					}
+				]
+			},
+			"bottom_padding": {
+				"order": 204,
+				"text": "Bottom Padding",
+				"type": "slider",
+				"value": 40,
+				"min": 0,
+				"max": 100,
+				"fraction": false
+			},
+			"cron_pattern": {
+				"order": 300,
+				"text": "Cron Pattern",
+				"type": "textinput",
+				"value": "*/10 * * * *"
+			},
+			"schemecolor": {
+				"order": 0,
+				"text": "ui_browse_properties_scheme_color",
+				"type": "color",
+				"value": "0 0 0"
+			}
+		}
+	},
+	"preview": "preview.jpg",
+	"title": "WebWallpaperRandomizer",
+	"type": "web",
+	"version": 0
+}
