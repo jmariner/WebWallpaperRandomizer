@@ -1,0 +1,11 @@
+{
+  "name": "WebWallpaperRandomizer-server",
+  "version": "1.0.0",
+  "main": "index.js",
+  "author": "jmariner",
+  "license": "MIT",
+  "private": true,
+  "dependencies": {
+    "socket.io": "^4.5.4"
+  }
+}
