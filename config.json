@@ -1,0 +1,25 @@
+{
+	"port": 4444,
+	"server": {
+		"cron": "*/10 * * * *",
+		"loadingBuffer": 0,
+		"wallhaven": {
+			"searchQueries": [
+				"id:2278"
+			],
+			"options": {
+				"categories": "010",
+				"purity": "100",
+				"sorting": "random",
+				"atleast": "1600x900",
+				"ratios": "landscape"
+			}
+		}
+	},
+	"client": {
+		"imageSizing": "contain",
+		"blurImageSides": true,
+		"imagePosition": "center center",
+		"bottomPadding": 40
+	}
+}
