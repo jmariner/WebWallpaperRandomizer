@@ -16,15 +16,15 @@
 	</div>
 
 	<div class="icon-buttons-wrap">
-
-		<button class="icon-btn" id="copy-link-button">
-			<span class="show-copied">Copied!</span>
-			<svg class="show-copied" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" height="48" width="48">
-				<path d="M18.9 35.7 7.7 24.5l2.15-2.15 9.05 9.05 19.2-19.2 2.15 2.15Z" />
+		<button class="icon-btn" id="open-config-button">
+			<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" height="48" width="48">
+				<path d="M11 44q-1.2 0-2.1-.9Q8 42.2 8 41V7q0-1.2.9-2.1Q9.8 4 11 4h17l12 12v13.5h-3V18H26V7H11v34h20.5v3Zm32.9.05-6.4-6.4v6.25h-3V32.5h11.4v3h-6.3l6.4 6.4ZM11 41V7v34Z" />
 			</svg>
+		</button>
 
-			<svg class="hide-copied" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" height="48" width="48">
-				<path d="M9 43.95q-1.2 0-2.1-.9-.9-.9-.9-2.1V10.8h3v30.15h23.7v3Zm6-6q-1.2 0-2.1-.9-.9-.9-.9-2.1v-28q0-1.2.9-2.1.9-.9 2.1-.9h22q1.2 0 2.1.9.9.9.9 2.1v28q0 1.2-.9 2.1-.9.9-2.1.9Zm0-3h22v-28H15v28Zm0 0v-28 28Z" />
+		<button class="icon-btn" id="open-link-button">
+			<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" height="48" width="48">
+				<path d="M9 42q-1.2 0-2.1-.9Q6 40.2 6 39V9q0-1.2.9-2.1Q7.8 6 9 6h30q1.2 0 2.1.9.9.9.9 2.1v30q0 1.2-.9 2.1-.9.9-2.1.9H28.5v-3H39V12H9v27h10.5v3Zm13.5 0V27.8l-4.15 4.15-2.15-2.15L24 22l7.8 7.8-2.15 2.15-4.15-4.15V42Z" />
 			</svg>
 		</button>
 
@@ -33,14 +33,22 @@
 				<path d="M29.05 40.5v-3h6.25l-9.2-9.15 2.1-2.15 9.3 9.2v-6.35h3V40.5Zm-19.45 0-2.1-2.15 27.9-27.9h-6.35v-3H40.5V18.9h-3v-6.3Zm10.15-18.7L7.5 9.6l2.15-2.15 12.25 12.2Z" />
 			</svg>
 		</button>
-
 	</div>
 
-	<script src="./client/lib/resize-image.js"></script>
-	<script src="./client/lib/Cronr.umd.min.js"></script>
-	<script>window.Cronr = window.Cronr.default</script>
-	<script src="./client/js/utils.js"></script>
-	<script src="./client/js/script.js"></script>
+	<div class="conn-error-wrap">
+		<div class="conn-error-text">
+			<p>
+				Failed to connect to local socket server on port <span id="conn-error-port"></span>. Change the port in the wallpaper settings.
+			</p>
+			<p>
+				<b>Error Details:</b><br />
+				<span id="conn-error-details"></span>
+			</p>
+		</div>
+	</div>
+
+	<script src="./client/lib/socket.io.min.js"></script>
+	<script src="./client/script.js"></script>
 </body>
 
 </html>

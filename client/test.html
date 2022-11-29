@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<title>Test</title>
+	<script src="./lib/socket.io.min.js"></script>
+	<style>
+		body {
+			margin: 0;
+			padding: 0;
+			width: 100vw;
+			height: 100vh;
+			background-size: contain;
+			background-position: center center;
+			background-repeat: no-repeat;
+		}
+	</style>
+</head>
+
+<body>
+	<script>
+		const socket = io("ws://localhost:4444");
+
+		socket.on("update wallpaper", (info) => {
+			const { img: imgBuffer, url: imgURL } = info;
+			console.log("Got wallpaper", imgURL);
+			const url = URL.createObjectURL(new Blob([imgBuffer], { type: "image/jpg" }));
+			document.body.style.backgroundImage = `url(${url})`;
+		});
+
+		function sendRefresh() {
+			socket.emit("cycle");
+		}
+
+		function openWallpaper() {
+			socket.emit("open wallpaper");
+		}
+
+		function openConfig() {
+			socket.emit("open config");
+		}
+	</script>
+	<button onclick="sendRefresh()">Refresh</button><br />
+	<button onclick="openWallpaper()">Open Wallpaper</button><br />
+	<button onclick="openConfig()">Open Config</button><br />
+
+</body>
+
+</html>

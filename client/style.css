@@ -110,24 +110,28 @@ body {
 	height: 24px;
 }
 
-#copy-link-button:not(.copied) > .show-copied,
-#copy-link-button.copied > .hide-copied {
+body:not(.conn-error) .conn-error-wrap {
 	display: none;
 }
 
-#copy-link-button .show-copied {
-	color: rgb(255, 255, 255);
+body.conn-error .hide-no-conn {
+	display: none;
 }
 
-/* body.loading #cycle-button svg {
-	animation: 0.5s linear infinite loading-anim;
-} */
+.conn-error-wrap {
+	position: fixed;
+	top: 0;
+	left: 0;
+	bottom: 0;
+	right: 0;
+	z-index: 1000;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	background-color: black;
+}
 
-@keyframes loading-anim {
-	from {
-		transform: rotateX(0deg);
-	}
-	to {
-		transform: rotateX(360deg);
-	}
+.conn-error-text {
+	padding: 0 16px;
+	border: 2px solid white;
 }

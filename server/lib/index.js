@@ -1,4 +1,4 @@
-require("dotenv/config");
+const { config: configDotenv } = require("dotenv");
 const fs = require("fs").promises;
 const path = require("path");
 const { performance } = require("perf_hooks");
@@ -15,14 +15,15 @@ const CONFIG_PATH = path.resolve(ROOT_DIR, "config.json");
 const API_URL_BASE = "https://wallhaven.cc/api/v1/search";
 const TARGET_SIZE = [1920, 1080];
 
+configDotenv({ path: path.resolve(ROOT_DIR, ".env") });
+
 const config = { server: {} };
-let skipLoadingBuffer = true;
 
 function setupCron() {
 	// TODO
 }
 
-async function getNewWallpaper() {
+async function sendNewWallpaper(socket, skipLoadingBuffer) {
 	const changeWallpaperAt = Date.now() + config.server.loadingBuffer * 1000;
 
 	const { searchQueries, options: baseQuery } = config.server.wallhaven;
@@ -60,12 +61,12 @@ async function getNewWallpaper() {
 		wallpapers = json2.data;
 	}
 
-	const randWallpaper = randChoice(wallpapers);
+	const { path: imgURL, short_url: wallpaperURL } = randChoice(wallpapers);
 
-	logger.info(`Chose wallpaper ${randWallpaper.short_url}`);
+	logger.info(`Chose wallpaper ${wallpaperURL}`);
 
 	/** @type {import("node-fetch").Response} */
-	const imgResult = await fetch(randWallpaper.path);
+	const imgResult = await fetch(imgURL);
 	let imgBuffer = await imgResult.arrayBuffer();
 	imgBuffer = Buffer.from(imgBuffer);
 
@@ -92,19 +93,11 @@ async function getNewWallpaper() {
 		await new Promise(resolve => setTimeout(resolve, waitForChange));
 	}
 
-	skipLoadingBuffer = false;
-	return {
+	socket.currentWallpaperURL = wallpaperURL;
+	socket.emit("update wallpaper", {
 		img: imgBuffer,
-		url: randWallpaper.short_url,
-	};
-}
-
-function openCurrentWallpaperURL(socket) {
-	const url = socket.currentImageURL;
-	if (!url)
-		return;
-	logger.info(`Received request to open wallpaper, opening "${url}"`);
-	open(socket.currentImageURL);
+		fav: false,
+	})
 }
 
 async function setup() {
@@ -136,16 +129,24 @@ async function setup() {
 	});
 
 	io.on("connection", socket => {
-		socket.on("refresh", () => {
-			getNewWallpaper().then(info => {
-				socket.currentImageURL = info.url;
-				socket.emit("new wallpaper", info);
-			}).catch(logger.error);
+		sendNewWallpaper(socket).catch(logger.error);
+
+		socket.on("cycle", () => {
+			sendNewWallpaper(socket).catch(logger.error);
 		});
 
 		socket.on("open wallpaper", () => {
-			openCurrentWallpaperURL(socket);
-		})
+			const url = socket.currentWallpaperURL;
+			if (!url)
+				return;
+			logger.info(`Received request to open wallpaper, opening "${url}"`);
+			open(socket.currentWallpaperURL);
+		});
+
+		socket.on("open config", () => {
+			logger.info(`Received request to open config, opening file "${CONFIG_PATH}"`);
+			open(CONFIG_PATH);
+		});
 	});
 
 	io.listen(config.port);

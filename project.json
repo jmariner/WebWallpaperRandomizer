@@ -2,25 +2,11 @@
 	"file": "index.html",
 	"general": {
 		"properties": {
-			"api_key": {
+			"socket_port": {
 				"order": 100,
-				"text": "API Key",
+				"text": "Socket Port",
 				"type": "textinput",
-				"value": ""
-			},
-			"search_queries": {
-				"order": 101,
-				"text": "Search Queries",
-				"type": "textinput",
-				"value": "id:41598, id:17524"
-			},
-			"loading_buffer_sec": {
-				"order": 150,
-				"text": "Loading Buffer (s)",
-				"type": "slider",
-				"min": 0,
-				"max": 300,
-				"value": 5
+				"value": "4444"
 			},
 			"image_sizing": {
 				"order": 200,
@@ -97,12 +83,6 @@
 				"min": 0,
 				"max": 100,
 				"fraction": false
-			},
-			"cron_pattern": {
-				"order": 300,
-				"text": "Cron Pattern",
-				"type": "textinput",
-				"value": "*/10 * * * *"
 			},
 			"schemecolor": {
 				"order": 0,
