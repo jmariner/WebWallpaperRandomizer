@@ -99,10 +99,12 @@ function setup(port) {
 
 	socket.on("connect_error", (err) => {
 		setConnectionError(true, { port, details: err.toString() });
+		console.error("Connection Error:", err);
 	});
 
 	socket.on("disconnect", (reason, details) => {
-		setConnectionError(true, { port, details: `${reason}: ${details}` });
+		setConnectionError(true, { port, details: `${reason} (${details.description})` });
+		console.error("Disconnected. Reason:", reason, "Details:", details);
 	});
 
 	socket.on("update wallpaper", (info) => {
