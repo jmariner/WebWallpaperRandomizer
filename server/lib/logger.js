@@ -15,7 +15,7 @@ const logger = winston.createLogger({
 	levels,
 	defaultMeta: { id: "GLOBAL" },
 	format: winston.format.combine(
-		winston.format.timestamp({ format: "YYYY-MM-DD HH:mm:ss ZZ" }),
+		winston.format.timestamp({ format: "YYYY-MM-DD HH:mm:ss.SSS ZZ" }),
 		winston.format.metadata({ key: "meta", fillWith: ["id"] }),
 		winston.format.printf(({ timestamp, level, message, meta }) => `[${timestamp}] [${formatLevel(level)}] [${meta.id}] ${message}`)
 	),

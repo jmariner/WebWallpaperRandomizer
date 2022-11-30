@@ -10,6 +10,7 @@ const { createLoggerWithID, globalLog } = require("./logger");
 
 const API_URL_BASE = "https://wallhaven.cc/api/v1/search";
 const TARGET_SIZE = [1920, 1080];
+const { CONFIG_PATH } = process.env;
 
 const config = { server: {} };
 
@@ -19,7 +20,7 @@ function setupCron() {
 
 async function sendNewWallpaper(socket, skipLoadingBuffer) {
 	const log = socket.log;
-	const changeWallpaperAt = Date.now() + config.server.loadingBuffer * 1000;
+	const changeWallpaperAt = performance.now() + config.server.loadingBuffer * 1000;
 
 	const { searchQueries, options: baseQuery } = config.server.wallhaven;
 	const randQuery = randChoice(searchQueries);
@@ -82,7 +83,7 @@ async function sendNewWallpaper(socket, skipLoadingBuffer) {
 	imgBuffer = await sharpImg.jpeg({ quality: 80 }).toBuffer();
 	log.info(`Finished image processing in ${timeSince(startLoadTime)}ms`);
 
-	const waitForChange = changeWallpaperAt - Date.now();
+	const waitForChange = changeWallpaperAt - performance.now();
 	if (!skipLoadingBuffer && waitForChange > 0) {
 		log.info(`Waiting ${waitForChange}ms to display new wallpaper`);
 		await new Promise(resolve => setTimeout(resolve, waitForChange));
@@ -96,11 +97,11 @@ async function sendNewWallpaper(socket, skipLoadingBuffer) {
 }
 
 async function setup() {
-	const confJson = await fs.readFile(process.env.CONFIG_PATH, "utf-8");
+	const confJson = await fs.readFile(CONFIG_PATH, "utf-8");
 	Object.assign(config, JSON.parse(confJson));
 	setupCron();
 
-	const watcher = chokidar.watch(process.env.CONFIG_PATH, {
+	const watcher = chokidar.watch(CONFIG_PATH, {
 		ignoreInitial: true,
 	});
 
@@ -125,9 +126,12 @@ async function setup() {
 
 	io.on("connection", socket => {
 		socket.log = createLoggerWithID(socket.id);
+		socket.log.info("Connected");
+
 		sendNewWallpaper(socket).catch(socket.log.error);
 
 		socket.on("cycle", () => {
+			socket.log.info("Received request to cycle wallpaper, running...");
 			sendNewWallpaper(socket).catch(socket.log.error);
 		});
 
@@ -142,6 +146,14 @@ async function setup() {
 		socket.on("open config", () => {
 			socket.log.info(`Received request to open config, opening file "${CONFIG_PATH}"`);
 			open(CONFIG_PATH);
+		});
+
+		socket.on("log", ({ level, msg }) => {
+			socket.log[level](`[CLIENT] ${msg}`);
+		})
+
+		socket.on("disconnect", (reason) => {
+			socket.log.info(`Disconnected. Reason: ${reason}`);
 		});
 	});
 

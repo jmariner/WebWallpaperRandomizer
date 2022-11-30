@@ -9,8 +9,19 @@ const OPEN_CONFIG_BTN = document.getElementById("open-config-button");
 const CONN_ERROR_PORT = document.getElementById("conn-error-port");
 const CONN_ERROR_DETAILS = document.getElementById("conn-error-details");
 
+
 const blobURLCache = [];
 let socket;
+
+const log = ["info", "warn", "error", "debug"].reduce((obj, level) => ({
+	...obj,
+	[level]: msg => {
+		if (socket && socket.connected)
+			socket.emit("log", { level, msg });
+		else
+			console[level](msg);
+	},
+}), {});
 
 window.wallpaperPropertyListener = {
 	applyUserProperties: (props) => {
@@ -42,16 +53,19 @@ OPEN_LINK_BTN.addEventListener("click", handleOpenLinkClicked);
 OPEN_CONFIG_BTN.addEventListener("click", handleOpenConfigClicked);
 
 function handleCycleClicked() {
+	log.info("Sending request to cycle wallpaper...");
 	if (socket && socket.connected)
 		socket.emit("cycle");
 }
 
 function handleOpenLinkClicked() {
+	log.info("Sending request to open wallpaper page...");
 	if (socket && socket.connected)
 		socket.emit("open wallpaper");
 }
 
 function handleOpenConfigClicked() {
+	log.info("Sending request to config file...");
 	if (socket && socket.connected)
 		socket.emit("open config");
 }
@@ -106,7 +120,7 @@ function setup(port) {
 		const url = URL.createObjectURL(new Blob([imgBuffer], { type: "image/jpg" }));
 		blobURLCache.push(url);
 		setWallpaper(url);
-
+		log.info("Updated wallpaper");
 	});
 }
 
