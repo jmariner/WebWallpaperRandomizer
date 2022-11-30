@@ -1,6 +1,4 @@
-require("./setup-env");
 const fs = require("fs").promises;
-const path = require("path");
 const { performance } = require("perf_hooks");
 const fetch = require("node-fetch");
 const chokidar = require('chokidar');
@@ -152,4 +150,8 @@ async function setup() {
 	globalLog.info("Socket.io server started on port", config.port);
 }
 
-setup().catch(globalLog.error);
+function startServer() {
+	setup().catch(globalLog.error);
+}
+
+module.exports = startServer;
