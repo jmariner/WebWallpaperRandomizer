@@ -1,10 +1,11 @@
-// const URL = require("url");
+const crypto = require("crypto");
 const fetch = require("node-fetch");
 const { performance } = require("perf_hooks");
 
 /** [min, max) */
 function rand(min, max) {
-	return min + Math.floor(Math.random() * (max - min));
+	return crypto.randomInt(min, max);
+	// return min + Math.floor(Math.random() * (max - min));
 }
 
 function randChoice(arr) {
