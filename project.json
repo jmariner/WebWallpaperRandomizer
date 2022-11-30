@@ -2,8 +2,14 @@
 	"file": "index.html",
 	"general": {
 		"properties": {
-			"socket_port": {
+			"monitor_label": {
 				"order": 100,
+				"text": "Monitor Label",
+				"type": "textinput",
+				"value": ""
+			},
+			"socket_port": {
+				"order": 101,
 				"text": "Socket Port",
 				"type": "textinput",
 				"value": "4444"

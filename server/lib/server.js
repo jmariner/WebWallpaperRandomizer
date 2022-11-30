@@ -46,7 +46,6 @@ function setupCron() {
 }
 
 async function sendNewWallpaper(socket, skipLoadingBuffer) {
-	const log = socket.log;
 	const changeWallpaperAt = performance.now() + config.server.loadingBuffer * 1000;
 
 	const { searchQueries, options: baseQuery } = config.server.wallhaven;
@@ -59,14 +58,14 @@ async function sendNewWallpaper(socket, skipLoadingBuffer) {
 	};
 
 	let startLoadTime = performance.now();
-	log.info(`Fetching with query "${randQuery}"...`);
+	socket.log.info(`Fetching with query "${randQuery}"...`);
 	const result = await doFetch(API_URL_BASE, query);
 
 	const { data, meta } = await result.json();
 	if (data.length === 0)
 		throw new Error("Invalid request: no wallpapers found");
 
-	log.info(`Fetching complete in ${timeSince(startLoadTime)}ms`);
+	socket.log.info(`Fetching complete in ${timeSince(startLoadTime)}ms`);
 
 	const pageCount = meta.last_page;
 	const randPage = rand(1, pageCount + 1);
@@ -77,16 +76,16 @@ async function sendNewWallpaper(socket, skipLoadingBuffer) {
 			query.seed = meta.seed;
 
 		startLoadTime = performance.now();
-		log.info(`Fetching again for page ${randPage}...`);
+		socket.log.info(`Fetching again for page ${randPage}...`);
 		const result2 = await doFetch(API_URL_BASE, query);
 		const json2 = await result2.json();
-		log.info(`Fetching complete in ${timeSince(startLoadTime)}ms`);
+		socket.log.info(`Fetching complete in ${timeSince(startLoadTime)}ms`);
 		wallpapers = json2.data;
 	}
 
 	const { path: imgURL, short_url: wallpaperURL } = randChoice(wallpapers);
 
-	log.info(`Chose wallpaper ${wallpaperURL}`);
+	socket.log.info(`Chose wallpaper ${wallpaperURL}`);
 
 	/** @type {import("node-fetch").Response} */
 	const imgResult = await fetch(imgURL);
@@ -101,18 +100,18 @@ async function sendNewWallpaper(socket, skipLoadingBuffer) {
 		const newSize = getResizedDim(TARGET_SIZE[0], TARGET_SIZE[1], width, height);
 		sharpImg = sharpImg.resize(newSize[0], newSize[1], {});
 
-		log.info(`Resized image from ${[width, height].map(Math.round).join("x")} to ${newSize.map(Math.round).join("x")}`);
+		socket.log.info(`Resized image from ${[width, height].map(Math.round).join("x")} to ${newSize.map(Math.round).join("x")}`);
 	}
 	else {
-		log.info(`Image already at target size (${TARGET_SIZE.map(Math.round).join("x")})`)
+		socket.log.info(`Image already at target size (${TARGET_SIZE.map(Math.round).join("x")})`)
 	}
 
 	imgBuffer = await sharpImg.jpeg({ quality: 80 }).toBuffer();
-	log.info(`Finished image processing in ${timeSince(startLoadTime)}ms`);
+	socket.log.info(`Finished image processing in ${timeSince(startLoadTime)}ms`);
 
 	const waitForChange = changeWallpaperAt - performance.now();
 	if (!skipLoadingBuffer && waitForChange > 0) {
-		log.info(`Waiting ${Math.round(waitForChange)}ms to display new wallpaper`);
+		socket.log.info(`Waiting ${Math.round(waitForChange)}ms to display new wallpaper`);
 		await new Promise(resolve => setTimeout(resolve, waitForChange));
 	}
 
@@ -156,6 +155,12 @@ async function setup() {
 		socket.log.info("Connected");
 
 		sendNewWallpaper(socket, true).catch(socket.log.error);
+
+		socket.on("set label", (label) => {
+			if (label.length === 0) return;
+			socket.log.info(`Got new label for socket: "${label}"`);
+			socket.log = createLoggerWithID(socket.id + ":" + label);
+		});
 
 		socket.on("cycle", () => {
 			socket.log.info("Received request to cycle wallpaper, running...");

@@ -9,7 +9,7 @@ const OPEN_CONFIG_BTN = document.getElementById("open-config-button");
 const CONN_ERROR_PORT = document.getElementById("conn-error-port");
 const CONN_ERROR_DETAILS = document.getElementById("conn-error-details");
 
-
+const options = {};
 const blobURLCache = [];
 let socket;
 
@@ -37,6 +37,11 @@ window.wallpaperPropertyListener = {
 		}
 		if (props.bottom_padding) {
 			document.body.style.setProperty("--bottom-padding", `${props.bottom_padding.value}px`);
+		}
+		if (props.monitor_label) {
+			options.monitorLabel = props.monitor_label.value.trim();
+			if (socket && socket.connected)
+				socket.emit("set label", options.monitorLabel);
 		}
 		if (props.socket_port) {
 			const port = props.socket_port.value;
@@ -95,6 +100,9 @@ function setup(port) {
 
 	socket.on("connect", () => {
 		setConnectionError(false);
+
+		if (options.monitorLabel)
+			socket.emit("set label", options.monitorLabel);
 	});
 
 	socket.on("connect_error", (err) => {
