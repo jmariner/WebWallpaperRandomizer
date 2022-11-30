@@ -8,6 +8,7 @@
   "dependencies": {
     "chokidar": "^3.5.3",
     "dotenv": "^16.0.3",
+    "node-cron": "^3.0.2",
     "node-fetch": "2",
     "open": "^8.4.0",
     "sharp": "0.30.7",
@@ -15,5 +16,7 @@
     "winston": "^3.8.2",
     "winston-daily-rotate-file": "^4.7.1"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "@types/node-cron": "^3.0.6"
+  }
 }

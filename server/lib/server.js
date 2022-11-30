@@ -1,10 +1,11 @@
 const fs = require("fs").promises;
 const { performance } = require("perf_hooks");
 const fetch = require("node-fetch");
-const chokidar = require('chokidar');
+const chokidar = require("chokidar");
 const { Server } = require("socket.io");
 const sharp = require("sharp");
 const open = require("open");
+const cron = require("node-cron");
 const { rand, randChoice, doFetch, timeSince, getResizedDim } = require("./utils");
 const { createLoggerWithID, globalLog } = require("./logger");
 
@@ -13,9 +14,35 @@ const TARGET_SIZE = [1920, 1080];
 const { CONFIG_PATH } = process.env;
 
 const config = { server: {} };
+/** @type {import("socket.io").Server} */
+let server;
+/** @type {import("node-cron").ScheduledTask} */
+let cronTask;
 
 function setupCron() {
-	// TODO
+	const pattern = config.server.cron;
+	if (!cron.validate(pattern)) {
+		globalLog.error(`Invalid cron pattern: "${pattern}". Not starting cron task. If cron was already running it won't be stopped.`);
+		return;
+	}
+
+	if (cronTask) {
+		cronTask.stop();
+	}
+
+	cronTask = cron.schedule(pattern, () => {
+		if (!server) {
+			globalLog.warn("Cron task triggered but server not running. Skipping.");
+			return;
+		}
+
+		globalLog.info("Cron triggered, cycling all wallpapers...")
+		const sockets = server.sockets.sockets.values();
+		for (const socket of sockets) {
+			sendNewWallpaper(socket, false).catch(socket.log.error);
+		}
+	});
+	globalLog.info(`Cron task started with pattern "${pattern}"`);
 }
 
 async function sendNewWallpaper(socket, skipLoadingBuffer) {
@@ -85,7 +112,7 @@ async function sendNewWallpaper(socket, skipLoadingBuffer) {
 
 	const waitForChange = changeWallpaperAt - performance.now();
 	if (!skipLoadingBuffer && waitForChange > 0) {
-		log.info(`Waiting ${waitForChange}ms to display new wallpaper`);
+		log.info(`Waiting ${Math.round(waitForChange)}ms to display new wallpaper`);
 		await new Promise(resolve => setTimeout(resolve, waitForChange));
 	}
 
@@ -118,21 +145,21 @@ async function setup() {
 		}).catch(globalLog.error);
 	});
 
-	const io = new Server({
+	server = new Server({
 		cors: {
 			origin: "*",
 		},
 	});
 
-	io.on("connection", socket => {
+	server.on("connection", socket => {
 		socket.log = createLoggerWithID(socket.id);
 		socket.log.info("Connected");
 
-		sendNewWallpaper(socket).catch(socket.log.error);
+		sendNewWallpaper(socket, true).catch(socket.log.error);
 
 		socket.on("cycle", () => {
 			socket.log.info("Received request to cycle wallpaper, running...");
-			sendNewWallpaper(socket).catch(socket.log.error);
+			sendNewWallpaper(socket, true).catch(socket.log.error);
 		});
 
 		socket.on("open wallpaper", () => {
@@ -157,7 +184,7 @@ async function setup() {
 		});
 	});
 
-	io.listen(config.port);
+	server.listen(config.port);
 
 	globalLog.info("Socket.io server started on port", config.port);
 }
