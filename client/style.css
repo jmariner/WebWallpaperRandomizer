@@ -135,3 +135,8 @@ body.conn-error .hide-no-conn {
 	border: 2px solid white;
 	background: rgba(0, 0, 0, 0.75);
 }
+
+body:not(.is-favorite) .show-if-fav,
+body.is-favorite .hide-if-fav {
+	display: none;
+}
