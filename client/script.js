@@ -92,8 +92,8 @@ function setup(port) {
 	});
 
 	socket.on("update wallpaper", (info) => {
-		const { img: imgBuffer, url: imgURL } = info;
-		console.log("Got wallpaper", imgURL);
+		const { img: imgBuffer } = info;
+		// TODO handle other info (is favorite, category/purity/tags?)
 
 		if (blobURLCache.length >= 3) {
 			for (const url of blobURLCache)
