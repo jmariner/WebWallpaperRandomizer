@@ -1,5 +1,8 @@
+const path = require("path");
 const winston = require("winston");
 require("winston-daily-rotate-file");
+
+const CURRENT_LOG_FILENAME = "current.log";
 
 const levels = {
 	error: 0,
@@ -26,7 +29,7 @@ const logger = winston.createLogger({
 			dirname: process.env.LOGS_DIR,
 			zippedArchive: true,
 			createSymlink: true,
-			symlinkName: "current.log",
+			symlinkName: CURRENT_LOG_FILENAME,
 			maxSize: "10m",
 		}),
 		process.env.NODE_ENV !== 'production' ? new winston.transports.Console() : null,
@@ -47,4 +50,5 @@ function createLoggerWithID(id) {
 module.exports = {
 	createLoggerWithID,
 	globalLog: createLoggerWithID("GLOBAL"),
+	LOG_FILE_PATH: path.resolve(process.env.LOGS_DIR, CURRENT_LOG_FILENAME),
 };

@@ -3,7 +3,9 @@
 }
 
 :root {
+	--body-padding: 4px;
 	--bottom-padding: 40px;
+	--icon-buttons-size: 32px;
 	--wallpaper: ;
 	--wallpaper-sizing: contain;
 	--wallpaper-position: center center;
@@ -15,6 +17,7 @@ html,
 body {
 	height: 100%;
 	margin: 0;
+	overflow: hidden;
 }
 
 body {
@@ -22,6 +25,8 @@ body {
 	font-size: 20px;
 	color: #ddd;
 }
+
+/* ===== wallpapers ===== */
 
 .bg,
 .bg-wrap {
@@ -63,52 +68,94 @@ body {
 	filter: blur(10px);
 }
 
-.icon-buttons-wrap {
+/* ===== control buttons ===== */
+
+.controls-wrap {
 	display: flex;
-	flex-flow: row;
+	flex-flow: row-reverse;
 	position: absolute;
-	right: 4px;
-	bottom: calc(var(--bottom-padding) + 4px);
+	right: var(--body-padding);
+	bottom: calc(var(--bottom-padding) + var(--body-padding));
+}
+
+.btn {
+	border: 0;
+	outline: 0;
+	color: rgb(255, 255, 255);
+	background: rgba(0, 0, 0, 0.5);
+	padding: 4px;
 }
 
 .icon-btn {
 	display: flex;
 	flex-flow: row;
 	align-items: center;
-	background: rgba(0, 0, 0, 0.5);
-	padding: 4px;
-	height: 32px;
-	border: 0;
-	outline: 0;
-	color: rgb(255, 255, 255);
+	height: var(--icon-buttons-size);
+	margin-left: 4px;
 }
 
-.icon-btn:not(:last-child) {
-	margin-right: 4px;
-}
-
-.icon-btn span {
-	font-size: 16px;
-	margin-right: 2px;
-}
-
-.icon-btn:hover {
+.btn:hover {
 	color: rgb(200, 200, 200);
 }
 
-.icon-btn:active {
+.btn:active {
 	color: rgb(150, 150, 150);
 }
 
-.icon-btn:disabled {
+.btn:disabled {
 	color: rgb(50, 50, 50);
 }
 
 .icon-btn svg {
 	fill: currentColor;
-	width: 24px;
-	height: 24px;
+	width: calc(var(--icon-buttons-size) - 8px);
+	height: calc(var(--icon-buttons-size) - 8px);
 }
+
+#favorite-button svg {
+	/* tweak favorite button icon */
+	transform: translateY(-1px) scale(1.2);
+}
+
+body:not(.is-favorite) .show-if-fav,
+body.is-favorite .hide-if-fav {
+	display: none;
+}
+
+.controls-more {
+	display: flex;
+	flex-flow: column;
+	position: absolute;
+	right: var(--body-padding);
+	bottom: calc(
+		var(--bottom-padding) + var(--body-padding) + var(--icon-buttons-size) +
+			4px
+	);
+	background: rgba(0, 0, 0, 0.5);
+	transition-property: opacity, visibility;
+	transition-duration: 0.25s;
+	transition-timing-function: ease-in-out;
+}
+
+.controls-more .text-btn {
+	text-align: left;
+	padding: 4px;
+}
+
+#controls-more-toggle:not(:checked) ~ div .controls-more {
+	opacity: 0;
+	visibility: hidden;
+}
+
+.controls-more-button svg {
+	transition: transform 0.2s ease-in-out;
+}
+
+#controls-more-toggle:checked ~ div .controls-more-button svg {
+	transform: rotateX(180deg);
+}
+
+/* ===== connection errors ===== */
 
 body:not(.conn-error) .conn-error-wrap {
 	display: none;
@@ -134,9 +181,4 @@ body.conn-error .hide-no-conn {
 	padding: 0 16px;
 	border: 2px solid white;
 	background: rgba(0, 0, 0, 0.75);
-}
-
-body:not(.is-favorite) .show-if-fav,
-body.is-favorite .hide-if-fav {
-	display: none;
 }

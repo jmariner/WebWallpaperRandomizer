@@ -6,8 +6,11 @@ const BG_SIZING = {
 const CYCLE_BTN = document.getElementById("cycle-button");
 const OPEN_LINK_BTN = document.getElementById("open-link-button");
 const OPEN_CONFIG_BTN = document.getElementById("open-config-button");
+const OPEN_LOGS_BTN = document.getElementById("open-logs-button");
+const OPEN_FAVORITES_BTN = document.getElementById("open-favorites-button");
 const CONN_ERROR_PORT = document.getElementById("conn-error-port");
 const CONN_ERROR_DETAILS = document.getElementById("conn-error-details");
+const CONTROLS_MORE_TOGGLE = document.getElementById("controls-more-toggle");
 
 const options = {};
 const blobURLCache = [];
@@ -56,6 +59,8 @@ window.wallpaperPropertyListener = {
 CYCLE_BTN.addEventListener("click", handleCycleClicked);
 OPEN_LINK_BTN.addEventListener("click", handleOpenLinkClicked);
 OPEN_CONFIG_BTN.addEventListener("click", handleOpenConfigClicked);
+OPEN_LOGS_BTN.addEventListener("click", handleOpenLogsClicked);
+OPEN_FAVORITES_BTN.addEventListener("click", handleOpenFavoritesClicked);
 
 function handleCycleClicked() {
 	log.info("Sending request to cycle wallpaper...");
@@ -70,9 +75,24 @@ function handleOpenLinkClicked() {
 }
 
 function handleOpenConfigClicked() {
-	log.info("Sending request to config file...");
+	log.info("Sending request to open config file...");
 	if (socket && socket.connected)
 		socket.emit("open config");
+	CONTROLS_MORE_TOGGLE.checked = false;
+}
+
+function handleOpenLogsClicked() {
+	log.info("Sending request to open logs file...");
+	if (socket && socket.connected)
+		socket.emit("open logs");
+	CONTROLS_MORE_TOGGLE.checked = false;
+}
+
+function handleOpenFavoritesClicked() {
+	log.info("Sending request to open favorites folder...");
+	if (socket && socket.connected)
+		socket.emit("open favorites");
+	CONTROLS_MORE_TOGGLE.checked = false;
 }
 
 function setLoading(isLoading) {
