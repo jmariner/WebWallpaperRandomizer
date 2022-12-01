@@ -1,14 +1,11 @@
 {
 	"port": 4444,
 	"server": {
-		"cron": "29 9,19,29,39,49,59 * * * *",
+		"cron": "30 9,19,29,39,49,59 * * * *",
 		"loadingBuffer": 30,
 		"wallhaven": {
 			"searchQueries": [
-				"id:41598",
-				"id:564",
-				"id:71777",
-				"id:17836"
+				"id:1"
 			],
 			"options": {
 				"categories": "010",
