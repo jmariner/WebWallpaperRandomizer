@@ -7,7 +7,7 @@ const sharp = require("sharp");
 const open = require("open");
 const cron = require("node-cron");
 const { rand, randChoice, doFetch, timeSince, getResizedDim } = require("./utils");
-const { createLoggerWithID, globalLog, LOG_FILE_PATH } = require("./logger");
+const { createLoggerWithID, globalLog, getCurrentLogFile } = require("./logger");
 
 const API_URL_BASE = "https://wallhaven.cc/api/v1/search";
 const TARGET_SIZE = [1920, 1080];
@@ -181,13 +181,9 @@ async function setup() {
 		});
 
 		socket.on("open logs", () => {
-			socket.log.info(`Received request to open logs, opening file "${LOG_FILE_PATH}"`);
-			// TODO this doesn't work, can't open symlink file?
-			// may need to resolve symlink, or calculate current log file name.
-			// open(LOG_FILE_PATH);
-
-			// fallback: open logs dir
-			open(process.env.LOGS_DIR);
+			const logFilePath = getCurrentLogFile();
+			socket.log.info(`Received request to open logs, opening file "${logFilePath}"`);
+			open(logFilePath);
 		});
 
 		socket.on("open favorites", () => {
