@@ -12,10 +12,17 @@ const OPEN_FAVORITES_BTN = document.getElementById("open-favorites-button");
 const CONN_ERROR_PORT = document.getElementById("conn-error-port");
 const CONN_ERROR_DETAILS = document.getElementById("conn-error-details");
 const CONTROLS_MORE_TOGGLE = document.getElementById("controls-more-toggle");
+/** @type {HTMLElement} */
+const TAG_TEMPLATE = document.getElementById("tag-template").content;
+const TAGS_WRAP = document.getElementById("tags-wrap");
 
 const options = {};
 const meta = {
 	isFav: false,
+	/** @type {Array<{ id: string, name: string }>} */
+	tags: [],
+	category: "",
+	uploader: "",
 };
 const blobURLCache = [];
 let socket;
@@ -165,11 +172,35 @@ function setup(port) {
 		log.info("Got new meta: " + JSON.stringify(newMeta));
 		Object.assign(meta, newMeta);
 
-		const { isFav } = meta;
+		const { isFav, tags, category, uploader } = meta;
+
+		// handle fav
 		document.body.classList.toggle("is-favorite", isFav);
 
-		// TODO handle other info (category/uploader/tags)
-		// show category as first tag, maybe bold or something
+		// handle tags
+		while (TAGS_WRAP.firstChild)
+			TAGS_WRAP.removeChild(TAGS_WRAP.firstChild);
+
+		const createTag = (text) => {
+			const tagEl = TAG_TEMPLATE.cloneNode(true);
+			tagEl.querySelector(".tag").innerText = text;
+			return tagEl;
+		}
+
+		for (const tag of tags) {
+			if (tag.name === category)
+				continue;
+			TAGS_WRAP.append(createTag(tag.name));
+		}
+
+		// handle uploader/category as special tags
+		for (const specialTagText of ["@" + uploader, category].reverse()) {
+			const specialTag = createTag(specialTagText);
+			specialTag.querySelector(".tag").classList.add("special-tag");
+			TAGS_WRAP.prepend(specialTag);
+		}
+
+		// TODO handle other info (uploader, fav/view counts, source URL)
 	});
 }
 

@@ -155,6 +155,35 @@ body.is-favorite .hide-if-fav {
 	transform: rotateX(180deg);
 }
 
+/* ===== wallpaper metadata ===== */
+
+#tags-wrap {
+	display: flex;
+	flex-flow: row;
+	flex-wrap: wrap;
+	position: absolute;
+	left: var(--body-padding);
+	bottom: calc(var(--bottom-padding) + var(--body-padding));
+	max-width: 75vw;
+}
+
+#tags-wrap .tag {
+	--height: 20px;
+	--v-pad: 4px;
+	font-size: calc(var(--height) - 2 * var(--v-pad));
+	line-height: 1em;
+	padding: var(--v-pad) 8px;
+	margin-right: 4px;
+	margin-top: 4px;
+	border-radius: calc(var(--height) / 2);
+	background-color: rgba(0, 0, 0, 0.5);
+	border: 1px solid hsl(0deg 0% 60% / 0.5);
+}
+
+#tags-wrap .tag.special-tag {
+	font-weight: bold;
+}
+
 /* ===== connection errors ===== */
 
 body:not(.conn-error) .conn-error-wrap {
