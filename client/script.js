@@ -39,6 +39,19 @@ const log = ["info", "warn", "error", "debug"].reduce((obj, level) => ({
 
 window.wallpaperPropertyListener = {
 	applyUserProperties: (props) => {
+		if (props.monitor_label) {
+			options.monitorLabel = props.monitor_label.value.trim();
+			if (socket && socket.connected)
+				socket.emit("set label", options.monitorLabel);
+		}
+		if (props.socket_port) {
+			const port = props.socket_port.value;
+			console.info("Got port", port);
+			if (/^\d{2,5}$/.test(port)) {
+				setup(port);
+			}
+		}
+
 		if (props.image_sizing) {
 			document.body.style.setProperty("--wallpaper-sizing", BG_SIZING[props.image_sizing.value])
 		}
@@ -52,18 +65,12 @@ window.wallpaperPropertyListener = {
 		if (props.bottom_padding) {
 			document.body.style.setProperty("--bottom-padding", `${props.bottom_padding.value}px`);
 		}
-		if (props.monitor_label) {
-			options.monitorLabel = props.monitor_label.value.trim();
-			if (socket && socket.connected)
-				socket.emit("set label", options.monitorLabel);
+
+		if (props.show_tags) {
+			document.body.classList.toggle("show-tags", props.show_tags.value);
 		}
-		if (props.socket_port) {
-			const port = props.socket_port.value;
-			console.info("Got port", port);
-			if (/^\d{2,5}$/.test(port)) {
-				setup(port);
-			}
-		}
+
+		log.debug("Got updates to the following properties: " + Object.keys(props).join(", "));
 	}
 };
 

@@ -157,6 +157,10 @@ body.is-favorite .hide-if-fav {
 
 /* ===== wallpaper metadata ===== */
 
+body:not(.show-tags) #tags-wrap {
+	display: none;
+}
+
 #tags-wrap {
 	display: flex;
 	flex-flow: row;
