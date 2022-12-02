@@ -66,8 +66,8 @@ window.wallpaperPropertyListener = {
 			document.body.style.setProperty("--bottom-padding", `${props.bottom_padding.value}px`);
 		}
 
-		if (props.show_tags) {
-			document.body.classList.toggle("show-tags", props.show_tags.value);
+		if (props.show_meta) {
+			document.body.classList.toggle("show-tags", props.show_meta.value);
 		}
 
 		log.debug("Got updates to the following properties: " + Object.keys(props).join(", "));

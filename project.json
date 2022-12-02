@@ -90,9 +90,9 @@
 				"max": 100,
 				"fraction": false
 			},
-			"show_tags": {
+			"show_meta": {
 				"order": 301,
-				"text": "Show Tags",
+				"text": "Show Metadata",
 				"type": "bool",
 				"value": true
 			}
