@@ -19,7 +19,7 @@ function makeURL(baseURL, query) {
 	return url.toString();
 }
 
-async function doFetch(url, query, ops = {}) {
+async function doFetch(url, query = {}, ops = {}) {
 	const fullURL = makeURL(url, query);
 	const result = await fetch(fullURL, {
 		method: "GET",

@@ -8,16 +8,32 @@ const open = require("open");
 const cron = require("node-cron");
 const { rand, randChoice, doFetch, timeSince, getResizedDim } = require("./utils");
 const { createLoggerWithID, globalLog, getCurrentLogFile } = require("./logger");
+const favorites = require("./favorites");
 
-const API_URL_BASE = "https://wallhaven.cc/api/v1/search";
+const API_URL_SEARCH = "https://wallhaven.cc/api/v1/search";
+const API_URL_WALLPAPER_INFO_BASE = "https://wallhaven.cc/api/v1/w/";
 const TARGET_SIZE = [1920, 1080];
-const { CONFIG_PATH } = process.env;
+const { WALLHAVEN_API_KEY, CONFIG_PATH, FAVORITES_DIR } = process.env;
 
 const config = { server: {} };
 /** @type {import("socket.io").Server} */
 let server;
 /** @type {import("node-cron").ScheduledTask} */
 let cronTask;
+
+/**
+ * @typedef {object} WallpaperInfo
+ * @property {string} site
+ * @property {string} id
+ * @property {string} url
+ * @property {string} uploader
+ * @property {number} viewCount
+ * @property {number} favoriteCount
+ * @property {string} sourceURL
+ * @property {string} category
+ * @property {Array<{ id: string, name: string }>} tags
+ * @property {boolean} isFav
+ */
 
 function setupCron() {
 	const pattern = config.server.cron;
@@ -53,39 +69,42 @@ async function sendNewWallpaper(socket, skipLoadingBuffer) {
 	const query = {
 		...baseQuery,
 		q: randQuery,
-		apikey: process.env.WALLHAVEN_API_KEY,
+		apikey: WALLHAVEN_API_KEY,
 		page: 1,
 	};
 
 	let startLoadTime = performance.now();
 	socket.log.info(`Fetching with query "${randQuery}"...`);
-	const result = await doFetch(API_URL_BASE, query);
+	const searchResult = await doFetch(API_URL_SEARCH, query);
+	const { data: wallpapers } = await searchResult.json();
 
-	const { data, meta } = await result.json();
-	if (data.length === 0)
+	if (wallpapers.length === 0)
 		throw new Error("Invalid request: no wallpapers found");
 
 	socket.log.info(`Fetching complete in ${timeSince(startLoadTime)}ms`);
 
-	const pageCount = meta.last_page;
-	const randPage = rand(1, pageCount + 1);
-	let wallpapers = data;
-	if (randPage !== 1) {
-		query.page = randPage;
-		if (meta.seed)
-			query.seed = meta.seed;
+	const { id: wallpaperID } = randChoice(wallpapers);
 
-		startLoadTime = performance.now();
-		socket.log.info(`Fetching again for page ${randPage}...`);
-		const result2 = await doFetch(API_URL_BASE, query);
-		const json2 = await result2.json();
-		socket.log.info(`Fetching complete in ${timeSince(startLoadTime)}ms`);
-		wallpapers = json2.data;
-	}
+	startLoadTime = performance.now();
+	socket.log.info(`Fetching info on wallpaper "${wallpaperID}"`);
+	const infoResults = await doFetch(API_URL_WALLPAPER_INFO_BASE + wallpaperID, { apikey: WALLHAVEN_API_KEY })
+	const { data: infoData } = await infoResults.json();
+	socket.log.info(`Fetching complete in ${timeSince(startLoadTime)}ms`);
 
-	const { path: imgURL, short_url: wallpaperURL } = randChoice(wallpapers);
-
-	socket.log.info(`Chose wallpaper ${wallpaperURL}`);
+	const { path: imgURL } = infoData;
+	/** @type {WallpaperInfo} */
+	const wallpaperInfo = {
+		site: "wallhaven",
+		id: wallpaperID,
+		url: infoData.short_url,
+		uploader: infoData.uploader.username,
+		viewCount: infoData.views,
+		favoriteCount: infoData.favorites,
+		sourceURL: infoData.source,
+		category: infoData.category,
+		tags: infoData.tags.map(({ id, name }) => ({ id, name })),
+	};
+	wallpaperInfo.isFav = await favorites.is(wallpaperInfo);
 
 	/** @type {import("node-fetch").Response} */
 	const imgResult = await fetch(imgURL);
@@ -115,11 +134,31 @@ async function sendNewWallpaper(socket, skipLoadingBuffer) {
 		await new Promise(resolve => setTimeout(resolve, waitForChange));
 	}
 
-	socket.currentWallpaperURL = wallpaperURL;
-	socket.emit("update wallpaper", {
-		img: imgBuffer,
-		fav: false,
-	})
+	socket.currentImageBuffer = imgBuffer;
+	socket.currentWallpaper = wallpaperInfo;
+	socket.emit("update wallpaper", imgBuffer);
+	await sendWallpaperMeta(socket, false);
+}
+
+async function sendWallpaperMeta(socket, doUpdate) {
+	/** @type {WallpaperInfo} */
+	const info = socket.currentWallpaper || {};
+
+	if (doUpdate) {
+		info.isFav = await favorites.is(info);
+
+		socket.currentWallpaper = info;
+	}
+
+	if (info)
+		socket.emit("update meta", info);
+}
+
+async function setWallpaperFavorite(socket, isFavorite) {
+	if (!socket.currentWallpaper)
+		return;
+	await favorites.set(socket.currentWallpaper, isFavorite, isFavorite ? socket.currentImageBuffer : null);
+	await sendWallpaperMeta(socket, true);
 }
 
 async function setup() {
@@ -167,27 +206,33 @@ async function setup() {
 			sendNewWallpaper(socket, true).catch(socket.log.error);
 		});
 
+		socket.on("set favorite", (newIsFav) => {
+			socket.log.info(`Received request to set wallpaper favorite to ${Boolean(newIsFav)}, running...`);
+			setWallpaperFavorite(socket, newIsFav).catch(socket.log.error);
+		});
+
 		socket.on("open wallpaper", () => {
-			const url = socket.currentWallpaperURL;
+			const { url } = socket.currentWallpaper || {};
 			if (!url)
 				return;
 			socket.log.info(`Received request to open wallpaper, opening "${url}"`);
-			open(socket.currentWallpaperURL);
+			open(url).catch(socket.log.error);
 		});
 
 		socket.on("open config", () => {
 			socket.log.info(`Received request to open config, opening file "${CONFIG_PATH}"`);
-			open(CONFIG_PATH);
+			open(CONFIG_PATH).catch(socket.log.error);
 		});
 
 		socket.on("open logs", () => {
 			const logFilePath = getCurrentLogFile();
 			socket.log.info(`Received request to open logs, opening file "${logFilePath}"`);
-			open(logFilePath);
+			open(logFilePath).catch(socket.log.error);
 		});
 
 		socket.on("open favorites", () => {
-			// TODO favs
+			socket.log.info(`Received request to open favorites, opening folder "${FAVORITES_DIR}"`);
+			open(FAVORITES_DIR).catch(socket.log.error);
 		})
 
 		socket.on("log", ({ level, msg }) => {

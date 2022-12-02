@@ -47,6 +47,11 @@ const logger = winston.createLogger({
 	].filter(Boolean),
 });
 
+/** @param {any[]} args */
+function formatLogMessage(args) {
+	return args.map(a => a instanceof Error ? [a.message, a.stack].filter(Boolean).join("\n") : a.toString()).join(" ");
+}
+
 /**
  * @param {string} id
  * @returns {Record<keyof typeof levels, import("winston").LeveledLogMethod>}
@@ -54,7 +59,7 @@ const logger = winston.createLogger({
 function createLoggerWithID(id) {
 	return Object.keys(levels).reduce((obj, level) => ({
 		...obj,
-		[level]: (...args) => logger.log(level, args.join(" "), { id }),
+		[level]: (...args) => logger.log(level, formatLogMessage(args), { id }),
 	}), {});
 }
 

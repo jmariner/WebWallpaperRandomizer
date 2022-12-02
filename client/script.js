@@ -4,6 +4,7 @@ const BG_SIZING = {
 };
 
 const CYCLE_BTN = document.getElementById("cycle-button");
+const FAVORITE_BTN = document.getElementById("favorite-button");
 const OPEN_LINK_BTN = document.getElementById("open-link-button");
 const OPEN_CONFIG_BTN = document.getElementById("open-config-button");
 const OPEN_LOGS_BTN = document.getElementById("open-logs-button");
@@ -13,6 +14,9 @@ const CONN_ERROR_DETAILS = document.getElementById("conn-error-details");
 const CONTROLS_MORE_TOGGLE = document.getElementById("controls-more-toggle");
 
 const options = {};
+const meta = {
+	isFav: false,
+};
 const blobURLCache = [];
 let socket;
 
@@ -57,6 +61,7 @@ window.wallpaperPropertyListener = {
 };
 
 CYCLE_BTN.addEventListener("click", handleCycleClicked);
+FAVORITE_BTN.addEventListener("click", handleFavoriteClicked);
 OPEN_LINK_BTN.addEventListener("click", handleOpenLinkClicked);
 OPEN_CONFIG_BTN.addEventListener("click", handleOpenConfigClicked);
 OPEN_LOGS_BTN.addEventListener("click", handleOpenLogsClicked);
@@ -66,6 +71,12 @@ function handleCycleClicked() {
 	log.info("Sending request to cycle wallpaper...");
 	if (socket && socket.connected)
 		socket.emit("cycle");
+}
+
+function handleFavoriteClicked() {
+	log.info("Sending request to toggle favorite...");
+	if (socket && socket.connected)
+		socket.emit("set favorite", !meta.isFav);
 }
 
 function handleOpenLinkClicked() {
@@ -135,10 +146,7 @@ function setup(port) {
 		console.error("Disconnected. Reason:", reason, "Details:", details);
 	});
 
-	socket.on("update wallpaper", (info) => {
-		const { img: imgBuffer } = info;
-		// TODO handle other info (is favorite, category/purity/tags?)
-
+	socket.on("update wallpaper", (imgBuffer) => {
 		if (blobURLCache.length >= 3) {
 			for (const url of blobURLCache)
 				URL.revokeObjectURL(url);
@@ -151,6 +159,17 @@ function setup(port) {
 		blobURLCache.push(url);
 		setWallpaper(url);
 		log.info("Updated wallpaper");
+	});
+
+	socket.on("update meta", (newMeta) => {
+		log.info("Got new meta: " + JSON.stringify(newMeta));
+		Object.assign(meta, newMeta);
+
+		const { isFav } = meta;
+		document.body.classList.toggle("is-favorite", isFav);
+
+		// TODO handle other info (category/uploader/tags)
+		// show category as first tag, maybe bold or something
 	});
 }
 
