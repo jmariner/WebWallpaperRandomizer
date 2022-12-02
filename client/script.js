@@ -2,6 +2,7 @@ const BG_SIZING = {
 	"black-bars": "contain",
 	"zoom-crop": "cover",
 };
+const META_DISPLAY_LEVELS = 2;
 
 const CYCLE_BTN = document.getElementById("cycle-button");
 const FAVORITE_BTN = document.getElementById("favorite-button");
@@ -68,8 +69,10 @@ window.wallpaperPropertyListener = {
 			document.body.style.setProperty("--bottom-padding", `${props.bottom_padding.value}px`);
 		}
 
-		if (props.show_meta) {
-			document.body.classList.toggle("show-meta", props.show_meta.value);
+		if (props.meta_display_level) {
+			const level = props.meta_display_level.value;
+			for (let i = 1; i <= META_DISPLAY_LEVELS; i++)
+				document.body.classList.toggle(`show-meta-${i}`, level >= i);
 		}
 
 		log.debug("Got updates to the following properties: " + Object.keys(props).join(", "));

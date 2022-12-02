@@ -157,9 +157,11 @@ body.is-favorite .hide-if-fav {
 
 /* ===== wallpaper metadata ===== */
 
-body:not(.show-meta) .meta-wrap,
+body:not(.show-meta-1) .meta-level-1,
+body:not(.show-meta-2) .meta-level-2,
+/* copy more of the above when incrasing meta display level */
 body:not(.has-meta) .meta-wrap {
-	display: none;
+	display: none !important;
 }
 
 .meta-wrap {
