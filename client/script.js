@@ -12,6 +12,8 @@ const OPEN_FAVORITES_BTN = document.getElementById("open-favorites-button");
 const CONN_ERROR_PORT = document.getElementById("conn-error-port");
 const CONN_ERROR_DETAILS = document.getElementById("conn-error-details");
 const CONTROLS_MORE_TOGGLE = document.getElementById("controls-more-toggle");
+const VIEWS_COUNT_TEXT = document.getElementById("views-count");
+const FAVORITES_COUNT_TEXT = document.getElementById("favorites-count");
 /** @type {HTMLElement} */
 const TAG_TEMPLATE = document.getElementById("tag-template").content;
 const TAGS_WRAP = document.getElementById("tags-wrap");
@@ -67,7 +69,7 @@ window.wallpaperPropertyListener = {
 		}
 
 		if (props.show_meta) {
-			document.body.classList.toggle("show-tags", props.show_meta.value);
+			document.body.classList.toggle("show-meta", props.show_meta.value);
 		}
 
 		log.debug("Got updates to the following properties: " + Object.keys(props).join(", "));
@@ -179,7 +181,7 @@ function setup(port) {
 		log.info("Got new meta: " + JSON.stringify(newMeta));
 		Object.assign(meta, newMeta);
 
-		const { isFav, tags, category, uploader } = meta;
+		const { isFav, tags, category, uploader, viewCount, favoriteCount } = meta;
 
 		// handle fav
 		document.body.classList.toggle("is-favorite", isFav);
@@ -207,7 +209,11 @@ function setup(port) {
 			TAGS_WRAP.prepend(specialTag);
 		}
 
-		// TODO handle other info (uploader, fav/view counts, source URL)
+		// handle view/fav count
+		VIEWS_COUNT_TEXT.innerText = viewCount;
+		FAVORITES_COUNT_TEXT.innerHTML = favoriteCount;
+
+		document.body.classList.add("has-meta");
 	});
 }
 
