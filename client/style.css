@@ -127,10 +127,7 @@ body.is-favorite .hide-if-fav {
 	flex-flow: column;
 	position: absolute;
 	right: var(--body-padding);
-	bottom: calc(
-		var(--bottom-padding) + var(--body-padding) + var(--icon-buttons-size) +
-			4px
-	);
+	bottom: calc(var(--bottom-padding) + var(--body-padding) + var(--icon-buttons-size) + 4px);
 	background: rgba(0, 0, 0, 0.5);
 	transition-property: opacity, visibility;
 	transition-duration: 0.25s;
@@ -253,12 +250,24 @@ body.conn-error .hide-no-conn {
 
 .tippy-box[data-theme~="custom"] {
 	background-color: rgba(0, 0, 0, 1);
+	/* transparency on border leaves a darker line between box and border, due to them overlapping. */
+	--arrow-color: rgba(0, 0, 0, 1);
 	color: white;
 	font-size: 12px;
 }
 
 .tippy-box[data-theme~="custom"][data-placement^="top"] > .tippy-arrow::before {
-	/* transparency on border leaves a darker line between box and border,
-	due to them overlapping. */
-	border-top-color: rgba(0, 0, 0, 1);
+	border-top-color: var(--arrow-color);
+}
+
+.tippy-box[data-theme~="custom"][data-placement^="bottom"] > .tippy-arrow::before {
+	border-bottom-color: var(--arrow-color);
+}
+
+.tippy-box[data-theme~="custom"][data-placement^="left"] > .tippy-arrow::before {
+	border-left-color: var(--arrow-color);
+}
+
+.tippy-box[data-theme~="custom"][data-placement^="right"] > .tippy-arrow::before {
+	border-right-color: var(--arrow-color);
 }

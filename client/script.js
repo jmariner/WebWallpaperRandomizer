@@ -15,6 +15,7 @@ const CONN_ERROR_DETAILS = document.getElementById("conn-error-details");
 const CONTROLS_MORE_TOGGLE = document.getElementById("controls-more-toggle");
 const VIEWS_COUNT_TEXT = document.getElementById("views-count");
 const FAVORITES_COUNT_TEXT = document.getElementById("favorites-count");
+const UPLOAD_DATE_TEXT = document.getElementById("upload-date");
 /** @type {HTMLElement} */
 const TAG_TEMPLATE = document.getElementById("tag-template").content;
 const TAGS_WRAP = document.getElementById("tags-wrap");
@@ -139,6 +140,23 @@ function setConnectionError(isError, { port, details } = {}) {
 	document.body.classList.toggle("conn-error", isError);
 }
 
+// Adapted from https://stackoverflow.com/a/47006398
+function timeSince(dateArg) {
+	const INTERVALS = [
+		{ label: "y", seconds: 60 * 60 * 24 * 365 },
+		{ label: "mo", seconds: 60 * 60 * 24 * 30 },
+		{ label: "d", seconds: 60 * 60 * 24 },
+		{ label: "h", seconds: 60 * 60 },
+		{ label: "m", seconds: 60 },
+		{ label: "s", seconds: 1 }
+	];
+
+	const seconds = Math.floor((Date.now() - new Date(dateArg).getTime()) / 1000);
+	const interval = INTERVALS.find(i => i.seconds < seconds);
+	const count = Math.floor(seconds / interval.seconds);
+	return `${count}${interval.label} ago`;
+}
+
 function setup(port) {
 	console.info("Connecting to socket on port", port);
 
@@ -184,7 +202,7 @@ function setup(port) {
 		log.info("Got new meta: " + JSON.stringify(newMeta));
 		Object.assign(meta, newMeta);
 
-		const { isFav, tags, category, uploader, viewCount, favoriteCount } = meta;
+		const { isFav, tags, category, uploader, viewCount, favoriteCount, uploadDate } = meta;
 
 		// handle fav
 		document.body.classList.toggle("is-favorite", isFav);
@@ -214,23 +232,27 @@ function setup(port) {
 			TAGS_WRAP.prepend(specialTag);
 		}
 
-		// handle view/fav count
+		// handle view count, fav count, and upload date
 		VIEWS_COUNT_TEXT.innerText = viewCount;
-		FAVORITES_COUNT_TEXT.innerHTML = favoriteCount;
+		FAVORITES_COUNT_TEXT.innerText = favoriteCount;
+		UPLOAD_DATE_TEXT.innerText = timeSince(uploadDate);
 
 		document.body.classList.add("has-meta");
 
-		// ===== tippy setup =====
-		const TIPPY_DELAY_IN = 500;
-		tippy.setDefaultProps({
-			delay: [TIPPY_DELAY_IN, 100],
-			theme: "custom",
-			allowHTML: true,
-			// hideOnClick: false,
-			// trigger: "click",
-		});
-		const tippyInstances = tippy("[data-tooltip]", { content: (el) => el.getAttribute("data-tooltip") });
-		tippy.createSingleton(tippyInstances, { delay: TIPPY_DELAY_IN });
+		tippy("[data-tooltip]:not(.tag)");
+		const tippyTags = tippy(".tag[data-tooltip]");
+		tippy.createSingleton(tippyTags, { delay: TIPPY_DELAY_IN });
+	});
+
+	// ===== tippy setup =====
+	const TIPPY_DELAY_IN = 500;
+	tippy.setDefaultProps({
+		content: (el) => el.getAttribute("data-tooltip"),
+		delay: [TIPPY_DELAY_IN, 100],
+		theme: "custom",
+		allowHTML: true,
+		// hideOnClick: false,
+		// trigger: "click",
 	});
 }
 

@@ -98,6 +98,7 @@ async function sendNewWallpaper(socket, skipLoadingBuffer) {
 		id: wallpaperID,
 		url: infoData.short_url,
 		uploader: infoData.uploader.username,
+		uploadDate: infoData.created_at,
 		viewCount: infoData.views,
 		favoriteCount: infoData.favorites,
 		sourceURL: infoData.source,
