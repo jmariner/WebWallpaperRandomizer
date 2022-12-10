@@ -248,3 +248,17 @@ body.conn-error .hide-no-conn {
 	border: 2px solid white;
 	background: rgba(0, 0, 0, 0.75);
 }
+
+/* ===== other stuff, libs, etc ===== */
+
+.tippy-box[data-theme~="custom"] {
+	background-color: rgba(0, 0, 0, 1);
+	color: white;
+	font-size: 12px;
+}
+
+.tippy-box[data-theme~="custom"][data-placement^="top"] > .tippy-arrow::before {
+	/* transparency on border leaves a darker line between box and border,
+	due to them overlapping. */
+	border-top-color: rgba(0, 0, 0, 1);
+}

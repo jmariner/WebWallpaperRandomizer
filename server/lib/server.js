@@ -102,7 +102,7 @@ async function sendNewWallpaper(socket, skipLoadingBuffer) {
 		favoriteCount: infoData.favorites,
 		sourceURL: infoData.source,
 		category: infoData.category,
-		tags: infoData.tags.map(({ id, name }) => ({ id, name })),
+		tags: infoData.tags.map(({ id, name, category }) => ({ id, name, category })),
 	};
 	wallpaperInfo.isFav = await favorites.is(wallpaperInfo);
 

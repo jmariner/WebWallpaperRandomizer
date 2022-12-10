@@ -202,7 +202,9 @@ function setup(port) {
 		for (const tag of tags) {
 			if (tag.name === category)
 				continue;
-			TAGS_WRAP.append(createTag(tag.name));
+			const tagEl = createTag(tag.name)
+			tagEl.querySelector(".tag").setAttribute("data-tooltip", `${tag.category}<br/>ID: ${tag.id}`);
+			TAGS_WRAP.append(tagEl);
 		}
 
 		// handle uploader/category as special tags
@@ -217,6 +219,18 @@ function setup(port) {
 		FAVORITES_COUNT_TEXT.innerHTML = favoriteCount;
 
 		document.body.classList.add("has-meta");
+
+		// ===== tippy setup =====
+		const TIPPY_DELAY_IN = 500;
+		tippy.setDefaultProps({
+			delay: [TIPPY_DELAY_IN, 100],
+			theme: "custom",
+			allowHTML: true,
+			// hideOnClick: false,
+			// trigger: "click",
+		});
+		const tippyInstances = tippy("[data-tooltip]", { content: (el) => el.getAttribute("data-tooltip") });
+		tippy.createSingleton(tippyInstances, { delay: TIPPY_DELAY_IN });
 	});
 }
 
