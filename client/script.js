@@ -179,7 +179,7 @@ function setup(port) {
 	});
 
 	socket.on("disconnect", (reason, details) => {
-		setConnectionError(true, { port, details: `${reason} (${details ? details.description : "???"})` });
+		setConnectionError(true, { port, details: reason + (details ? ` (${details.description})` : "") });
 		console.error("Disconnected. Reason:", reason, "Details:", details);
 	});
 
