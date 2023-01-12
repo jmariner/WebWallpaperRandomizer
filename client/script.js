@@ -127,6 +127,8 @@ function handleOpenFavoritesClicked() {
 }
 
 function setLoading(isLoading) {
+	// TODO on server - on begin request, emit message and set loading=true, on request done (and before waiting buffer time) set loading=false.
+	// if cycle requested during loading buffer, cancel buffer wait and update image right away, instead of making a new request.
 	document.body.classList.toggle("loading", isLoading);
 	CYCLE_BTN.disabled = isLoading;
 }
