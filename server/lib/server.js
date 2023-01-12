@@ -6,7 +6,7 @@ const { Server } = require("socket.io");
 const sharp = require("sharp");
 const open = require("open");
 const cron = require("node-cron");
-const { rand, randChoice, doFetch, timeSince, getResizedDim } = require("./utils");
+const { randChoice, doFetch, timeSince, getResizedDim, formatResolution } = require("./utils");
 const { createLoggerWithID, globalLog, getCurrentLogFile } = require("./logger");
 const favorites = require("./favorites");
 
@@ -31,6 +31,8 @@ let cronTask;
  * @property {number} favoriteCount
  * @property {string} sourceURL
  * @property {string} category
+ * @property {string} origResolution
+ * @property {string} resolution
  * @property {Array<{ id: string, name: string }>} tags
  * @property {boolean} isFav
  */
@@ -115,16 +117,22 @@ async function sendNewWallpaper(socket, skipLoadingBuffer) {
 	startLoadTime = performance.now();
 	let sharpImg = sharp(imgBuffer);
 	const { width, height } = await sharpImg.metadata();
+	const origRes = [width, height];
+	let finalRes = origRes;
 	if (width !== TARGET_SIZE[0] || height !== TARGET_SIZE[1]) {
 		// resize image to 1920x1080 but keep original AR
-		const newSize = getResizedDim(TARGET_SIZE[0], TARGET_SIZE[1], width, height);
+		const newSize = getResizedDim(TARGET_SIZE, origRes);
 		sharpImg = sharpImg.resize(newSize[0], newSize[1], {});
 
-		socket.log.info(`Resized image from ${[width, height].map(Math.round).join("x")} to ${newSize.map(Math.round).join("x")}`);
+		socket.log.info(`Resized image from ${formatResolution(origRes)} to ${formatResolution(newSize)}`);
+		finalRes = newSize;
 	}
 	else {
-		socket.log.info(`Image already at target size (${TARGET_SIZE.map(Math.round).join("x")})`)
+		socket.log.info(`Image already at target size (${formatResolution(TARGET_SIZE)})`)
 	}
+
+	wallpaperInfo.origResolution = formatResolution(origRes);
+	wallpaperInfo.resolution = formatResolution(finalRes);
 
 	imgBuffer = await sharpImg.jpeg({ quality: 80 }).toBuffer();
 	socket.log.info(`Finished image processing in ${timeSince(startLoadTime)}ms`);

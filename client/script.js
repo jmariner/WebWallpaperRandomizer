@@ -16,6 +16,7 @@ const CONTROLS_MORE_TOGGLE = document.getElementById("controls-more-toggle");
 const VIEWS_COUNT_TEXT = document.getElementById("views-count");
 const FAVORITES_COUNT_TEXT = document.getElementById("favorites-count");
 const UPLOAD_DATE_TEXT = document.getElementById("upload-date");
+const RESOLUTION_INFO_TEXT = document.getElementById("resolution-info");
 /** @type {HTMLElement} */
 const TAG_TEMPLATE = document.getElementById("tag-template").content;
 const TAGS_WRAP = document.getElementById("tags-wrap");
@@ -204,7 +205,11 @@ function setup(port) {
 		log.info("Got new meta: " + JSON.stringify(newMeta));
 		Object.assign(meta, newMeta);
 
-		const { isFav, tags, category, uploader, viewCount, favoriteCount, uploadDate } = meta;
+		const {
+			isFav, tags, category, uploader,
+			viewCount, favoriteCount, uploadDate,
+			origResolution, resolution
+		} = meta;
 
 		// handle fav
 		document.body.classList.toggle("is-favorite", isFav);
@@ -234,10 +239,13 @@ function setup(port) {
 			TAGS_WRAP.prepend(specialTag);
 		}
 
-		// handle view count, fav count, and upload date
+		// handle view count, fav count, upload date, and resolution
 		VIEWS_COUNT_TEXT.innerText = viewCount;
 		FAVORITES_COUNT_TEXT.innerText = favoriteCount;
 		UPLOAD_DATE_TEXT.innerText = timeSince(uploadDate);
+		RESOLUTION_INFO_TEXT.innerText = origResolution;
+		// OR
+		// origResolution === resolution ? resolution : `${origResolution} (${resolution})`;
 
 		document.body.classList.add("has-meta");
 

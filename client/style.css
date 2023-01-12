@@ -192,10 +192,12 @@ body:not(.has-meta) .meta-wrap {
 
 .meta-wrap .meta-text-block .v-sep {
 	display: inline-block;
-	height: calc(1em + 3px);
+	height: calc(1em + 5px);
 	width: 1px;
-	margin-bottom: -2px;
-	background-color: hsl(0deg 0% 60% / 0.75);
+	margin-bottom: -3px;
+	margin-left: 1px;
+	margin-right: 1px;
+	background-color: var(--border-color);
 }
 
 #tags-wrap {

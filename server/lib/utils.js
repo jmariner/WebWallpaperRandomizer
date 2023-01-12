@@ -39,17 +39,28 @@ function timeSince(t) {
 	return Math.round(performance.now() - t);
 }
 
-function getResizedDim(maxX, maxY, x, y) {
-	const max = [maxX, maxY];
-	const dim = [x, y];
-	const ar = dim[0] / dim[1];
-	let targetDim = [...dim];
-	if (dim[0] > dim[1] && dim[0] > max[0])
-		targetDim = [max[0], Math.round(max[0] / ar)];
-	else if (dim[1] > max[1])
-		targetDim = [Math.round(max[1] * ar), max[1]];
+/**
+ * @param {[number, number]} maxRes
+ * @param {[number, number]} origRes
+ * @returns {[number, number]}
+ */
+function getResizedDim(maxRes, origRes) {
+	const ar = origRes[0] / origRes[1];
+	let targetDim = [...origRes];
+	if (origRes[0] > origRes[1] && origRes[0] > maxRes[0])
+		targetDim = [maxRes[0], Math.round(maxRes[0] / ar)];
+	else if (origRes[1] > maxRes[1])
+		targetDim = [Math.round(maxRes[1] * ar), maxRes[1]];
 
 	return targetDim;
+}
+
+/**
+ * @param {[number, number]} res
+ * @returns {string}
+ */
+function formatResolution(res) {
+	return res.map(Math.round).join("x");
 }
 
 module.exports = {
@@ -59,4 +70,5 @@ module.exports = {
 	doFetch,
 	timeSince,
 	getResizedDim,
+	formatResolution,
 };
