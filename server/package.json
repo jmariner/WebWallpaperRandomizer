@@ -17,6 +17,8 @@
     "winston-daily-rotate-file": "^4.7.1"
   },
   "devDependencies": {
-    "@types/node-cron": "^3.0.6"
+    "@types/node-cron": "^3.0.6",
+    "@types/node-fetch": "^2.6.2",
+    "@types/sharp": "^0.31.1"
   }
 }
