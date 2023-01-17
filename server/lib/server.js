@@ -6,7 +6,7 @@ const { Server } = require("socket.io");
 const sharp = require("sharp");
 const open = require("open");
 const cron = require("node-cron");
-const { randChoice, doFetch, timeSince, getResizedDim, formatResolution } = require("./utils");
+const { rand, randChoice, doFetch, timeSince, getResizedDim, formatResolution } = require("./utils");
 const { createLoggerWithID, globalLog, getCurrentLogFile } = require("./logger");
 const favorites = require("./favorites");
 
@@ -15,7 +15,11 @@ const API_URL_WALLPAPER_INFO_BASE = "https://wallhaven.cc/api/v1/w/";
 const TARGET_SIZE = [1920, 1080];
 const { WALLHAVEN_API_KEY, CONFIG_PATH, FAVORITES_DIR } = process.env;
 
+/** @type {typeof import("../../config.template.json")} */
 const config = { server: {} };
+/** @type {SearchQueryInfo[]} */
+const queryInfoList = [];
+
 /** @type {import("socket.io").Server} */
 let server;
 /** @type {import("node-cron").ScheduledTask} */
@@ -35,6 +39,15 @@ let cronTask;
  * @property {string} resolution
  * @property {Array<{ id: string, name: string }>} tags
  * @property {boolean} isFav
+ *
+ * @typedef {object} SearchQueryInfo
+ * @property {string} siteID
+ * @property {string} queryString
+ * @property {string} queryDesc
+ * @property {number} resultCount
+ * @property {number} pageCount
+ * @property {number} perPage
+ * @property {string[]} idCacheList
  */
 
 function setupCron() {
@@ -66,9 +79,12 @@ function setupCron() {
 async function sendNewWallpaper(socket, skipLoadingBuffer) {
 	const changeWallpaperAt = performance.now() + config.server.loadingBuffer * 1000;
 
-	const { searchQueries, options: baseQuery } = config.server.wallhaven;
+	const siteID = "wallhaven";
+	const { searchQueries, options: baseQuery } = config.server[siteID];
 	const randQuery = randChoice(searchQueries);
 	const query = {
+		sorting: "date_added",
+		order: "desc",
 		...baseQuery,
 		q: randQuery,
 		apikey: WALLHAVEN_API_KEY,
@@ -76,16 +92,57 @@ async function sendNewWallpaper(socket, skipLoadingBuffer) {
 	};
 
 	let startLoadTime = performance.now();
-	socket.log.info(`Fetching with query "${randQuery}"...`);
-	const searchResult = await doFetch(API_URL_SEARCH, query);
-	const { data: wallpapers } = await searchResult.json();
 
-	if (wallpapers.length === 0)
+	let queryInfoIdx = queryInfoList.findIndex(info => info.siteID === siteID && info.queryString === randQuery);
+	if (queryInfoIdx === -1) {
+		socket.log.info(`Fetching info on query "${randQuery}"...`);
+		const searchResult = await doFetch(API_URL_SEARCH, query);
+		const { meta } = await searchResult.json();
+		const queryInfo = {
+			siteID,
+			queryString: randQuery,
+			queryDesc: typeof meta.query === "string" ? meta.query : meta.query.tag || null,
+			pageCount: parseInt(meta.last_page, 10),
+			perPage: parseInt(meta.per_page, 10),
+			resultCount: parseInt(meta.total, 10),
+		};
+		queryInfo.idCacheList = [];
+		queryInfoList.push(queryInfo);
+		queryInfoIdx = queryInfoList.length - 1;
+
+		socket.log.info(`Fetching complete in ${timeSince(startLoadTime)}ms`);
+	}
+	else {
+		socket.log.info(`Got info on query "${randQuery}" from cache`);
+	}
+
+	const queryInfo = queryInfoList[queryInfoIdx];
+	if (queryInfo.resultCount === 0)
 		throw new Error("Invalid request: no wallpapers found");
 
-	socket.log.info(`Fetching complete in ${timeSince(startLoadTime)}ms`);
+	const randIdx = rand(0, queryInfo.resultCount);
+	let wallpaperID = queryInfo.idCacheList[randIdx];
+	if (!wallpaperID) {
+		startLoadTime = performance.now();
+		query.page = Math.floor(randIdx / queryInfo.perPage) + 1;
+		socket.log.info(`Fetching page ${query.page} for wallpaper at index ${randIdx}`);
 
-	const { id: wallpaperID } = randChoice(wallpapers);
+		const searchResult = await doFetch(API_URL_SEARCH, query);
+		const { data } = await searchResult.json();
+
+		const pageStartIdx = (query.page - 1) * queryInfo.perPage;
+		for (let i = 0; i < data.length; i++) {
+			queryInfo.idCacheList[pageStartIdx + i] = data[i].id;
+		}
+
+		wallpaperID = queryInfo.idCacheList[randIdx];
+		queryInfoList[queryInfoIdx] = queryInfo;
+
+		socket.log.info(`Fetching complete in ${timeSince(startLoadTime)}ms`);
+	}
+	else {
+		socket.log.info(`Got random wallpaper ID "${wallpaperID}" from cache`)
+	}
 
 	startLoadTime = performance.now();
 	socket.log.info(`Fetching info on wallpaper "${wallpaperID}"`);

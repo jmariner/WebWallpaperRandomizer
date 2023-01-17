@@ -21,6 +21,7 @@ function makeURL(baseURL, query) {
 
 async function doFetch(url, query = {}, ops = {}) {
 	const fullURL = makeURL(url, query);
+	/** @type {import("node-fetch").Response} */
 	const result = await fetch(fullURL, {
 		method: "GET",
 		mode: "cors",

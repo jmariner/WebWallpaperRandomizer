@@ -10,7 +10,6 @@
 			"options": {
 				"categories": "010",
 				"purity": "100",
-				"sorting": "random",
 				"atleast": "1600x900",
 				"ratios": "landscape"
 			}
