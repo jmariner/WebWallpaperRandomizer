@@ -21,6 +21,12 @@
 
 		<div class="controls-wrap hide-no-conn">
 
+			<label for="controls-more-toggle" class="btn icon-btn controls-more-button">
+				<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" height="48" width="48">
+					<path d="M14.15 30.75 12 28.6l12-12 12 11.95-2.15 2.15L24 20.85Z" />
+				</svg>
+			</label>
+
 			<button class="btn icon-btn" id="cycle-button">
 				<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" height="48" width="48">
 					<path d="M29.05 40.5v-3h6.25l-9.2-9.15 2.1-2.15 9.3 9.2v-6.35h3V40.5Zm-19.45 0-2.1-2.15 27.9-27.9h-6.35v-3H40.5V18.9h-3v-6.3Zm10.15-18.7L7.5 9.6l2.15-2.15 12.25 12.2Z" />
@@ -43,24 +49,22 @@
 				</svg>
 			</button>
 
-			<label for="controls-more-toggle" class="btn icon-btn controls-more-button">
-				<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" height="48" width="48">
-					<path d="M14.15 30.75 12 28.6l12-12 12 11.95-2.15 2.15L24 20.85Z" />
-				</svg>
-			</label>
-
 		</div>
 
 		<div class="controls-more hide-no-conn">
-			<button class="btn text-btn" id="open-config-button">
+			<button class="btn control-text" id="open-config-button">
 				Open Config File
 			</button>
-			<button class="btn text-btn" id="open-logs-button">
+			<button class="btn control-text" id="open-logs-button">
 				Open Log File
 			</button>
-			<button class="btn text-btn" id="open-favorites-button">
-				Open Favorites Folder
+			<button class="btn control-text" id="open-favorites-button">
+				View Favorites
 			</button>
+			<label class="checkbox control-text">
+				<input id="favorites-only-checkbox" type="checkbox" />
+				Favorites Only
+			</label>
 		</div>
 	</div>
 

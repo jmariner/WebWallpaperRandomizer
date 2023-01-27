@@ -10,6 +10,7 @@ const OPEN_LINK_BTN = document.getElementById("open-link-button");
 const OPEN_CONFIG_BTN = document.getElementById("open-config-button");
 const OPEN_LOGS_BTN = document.getElementById("open-logs-button");
 const OPEN_FAVORITES_BTN = document.getElementById("open-favorites-button");
+const ONLY_FAVORITES_CHECK = document.getElementById("favorites-only-checkbox");
 const CONN_ERROR_PORT = document.getElementById("conn-error-port");
 const CONN_ERROR_DETAILS = document.getElementById("conn-error-details");
 const CONTROLS_MORE_TOGGLE = document.getElementById("controls-more-toggle");
@@ -87,6 +88,7 @@ OPEN_LINK_BTN.addEventListener("click", handleOpenLinkClicked);
 OPEN_CONFIG_BTN.addEventListener("click", handleOpenConfigClicked);
 OPEN_LOGS_BTN.addEventListener("click", handleOpenLogsClicked);
 OPEN_FAVORITES_BTN.addEventListener("click", handleOpenFavoritesClicked);
+ONLY_FAVORITES_CHECK.addEventListener("change", handleOnlyFavoritesChanged)
 
 function handleCycleClicked() {
 	log.info("Sending request to cycle wallpaper...");
@@ -124,6 +126,14 @@ function handleOpenFavoritesClicked() {
 	log.info("Sending request to open favorites folder...");
 	if (socket && socket.connected)
 		socket.emit("open favorites");
+	CONTROLS_MORE_TOGGLE.checked = false;
+}
+
+function handleOnlyFavoritesChanged() {
+	const on = ONLY_FAVORITES_CHECK.checked;
+	log.info(`Sending request to set Only Favorites mode to '${on}'...`);
+	if (socket && socket.connected)
+		socket.emit("set only favorites", on);
 	CONTROLS_MORE_TOGGLE.checked = false;
 }
 
