@@ -19,6 +19,8 @@ const { WALLHAVEN_API_KEY, CONFIG_PATH, FAVORITES_DIR } = process.env;
 const config = { server: {} };
 /** @type {SearchQueryInfo[]} */
 const queryInfoList = [];
+/** @type {string[]} */
+const availableQueryStrings = [];
 
 /** @type {import("socket.io").Server} */
 let server;
@@ -81,26 +83,31 @@ async function sendNewWallpaper(socket, skipLoadingBuffer) {
 
 	const siteID = "wallhaven";
 	const { searchQueries, options: baseQuery } = config.server[siteID];
-	const randQuery = randChoice(searchQueries);
+	if (availableQueryStrings.length === 0) {
+		availableQueryStrings.push(...searchQueries);
+		availableQueryStrings.sort(() => Math.random() - 0.5);
+	}
+
+	const queryString = availableQueryStrings.pop();
 	const query = {
-		sorting: "date_added",
-		order: "desc",
 		...baseQuery,
-		q: randQuery,
+		sorting: "date_added", // static sort order
+		order: "asc", // so newly-added wallpapers appear at end
+		q: queryString,
 		apikey: WALLHAVEN_API_KEY,
 		page: 1,
 	};
 
 	let startLoadTime = performance.now();
 
-	let queryInfoIdx = queryInfoList.findIndex(info => info.siteID === siteID && info.queryString === randQuery);
+	let queryInfoIdx = queryInfoList.findIndex(info => info.siteID === siteID && info.queryString === queryString);
 	if (queryInfoIdx === -1) {
-		socket.log.info(`Fetching info on query "${randQuery}"...`);
+		socket.log.info(`Fetching info on query "${queryString}"...`);
 		const searchResult = await doFetch(API_URL_SEARCH, query);
 		const { meta } = await searchResult.json();
 		const queryInfo = {
 			siteID,
-			queryString: randQuery,
+			queryString,
 			queryDesc: typeof meta.query === "string" ? meta.query : meta.query.tag || null,
 			pageCount: parseInt(meta.last_page, 10),
 			perPage: parseInt(meta.per_page, 10),
@@ -113,7 +120,7 @@ async function sendNewWallpaper(socket, skipLoadingBuffer) {
 		socket.log.info(`Fetching complete in ${timeSince(startLoadTime)}ms`);
 	}
 	else {
-		socket.log.info(`Got info on query "${randQuery}" from cache`);
+		socket.log.info(`Got info on query "${queryString}" from cache`);
 	}
 
 	const queryInfo = queryInfoList[queryInfoIdx];
@@ -300,6 +307,10 @@ async function setup() {
 			socket.log.info(`Received request to open favorites, opening folder "${FAVORITES_DIR}"`);
 			open(FAVORITES_DIR).catch(socket.log.error);
 		})
+
+		socket.on("set only favorites", (newOnlyFavorites) => {
+			// TODO
+		});
 
 		socket.on("log", ({ level, msg }) => {
 			socket.log[level](`[CLIENT] ${msg}`);
