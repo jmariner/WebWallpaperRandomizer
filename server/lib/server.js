@@ -6,10 +6,13 @@ const { Server } = require("socket.io");
 const sharp = require("sharp");
 const open = require("open");
 const cron = require("node-cron");
+const CommentJSON = require("comment-json");
+const jsonDiff = require("json-diff");
 const { rand, randChoice, doFetch, timeSince, getResizedDim, formatResolution } = require("./utils");
 const { createLoggerWithID, globalLog, getCurrentLogFile } = require("./logger");
 const favorites = require("./favorites");
 
+const SITE_ID = "wallhaven";
 const API_URL_SEARCH = "https://wallhaven.cc/api/v1/search";
 const API_URL_WALLPAPER_INFO_BASE = "https://wallhaven.cc/api/v1/w/";
 const TARGET_SIZE = [1920, 1080];
@@ -81,8 +84,7 @@ function setupCron() {
 async function sendNewWallpaper(socket, skipLoadingBuffer) {
 	const changeWallpaperAt = performance.now() + config.server.loadingBuffer * 1000;
 
-	const siteID = "wallhaven";
-	const { searchQueries, options: baseQuery } = config.server[siteID];
+	const { searchQueries, options: baseQuery } = config.server[SITE_ID];
 	if (availableQueryStrings.length === 0) {
 		availableQueryStrings.push(...searchQueries);
 		availableQueryStrings.sort(() => Math.random() - 0.5);
@@ -100,13 +102,13 @@ async function sendNewWallpaper(socket, skipLoadingBuffer) {
 
 	let startLoadTime = performance.now();
 
-	let queryInfoIdx = queryInfoList.findIndex(info => info.siteID === siteID && info.queryString === queryString);
+	let queryInfoIdx = queryInfoList.findIndex(info => info.siteID === SITE_ID && info.queryString === queryString);
 	if (queryInfoIdx === -1) {
 		socket.log.info(`Fetching info on query "${queryString}"...`);
 		const searchResult = await doFetch(API_URL_SEARCH, query);
 		const { meta } = await searchResult.json();
 		const queryInfo = {
-			siteID,
+			siteID: SITE_ID,
 			queryString,
 			queryDesc: typeof meta.query === "string" ? meta.query : meta.query.tag || null,
 			pageCount: parseInt(meta.last_page, 10),
@@ -160,7 +162,7 @@ async function sendNewWallpaper(socket, skipLoadingBuffer) {
 	const { path: imgURL } = infoData;
 	/** @type {WallpaperInfo} */
 	const wallpaperInfo = {
-		site: "wallhaven",
+		site: SITE_ID,
 		id: wallpaperID,
 		url: infoData.short_url,
 		uploader: infoData.uploader.username,
@@ -236,7 +238,7 @@ async function setWallpaperFavorite(socket, isFavorite) {
 
 async function setup() {
 	const confJson = await fs.readFile(CONFIG_PATH, "utf-8");
-	Object.assign(config, JSON.parse(confJson));
+	Object.assign(config, CommentJSON.parse(confJson));
 	setupCron();
 
 	const watcher = chokidar.watch(CONFIG_PATH, {
@@ -248,11 +250,16 @@ async function setup() {
 		fs.readFile(path, "utf-8").then(confJson => {
 			if (confJson.length === 0)
 				return;
-			const newConf = JSON.parse(confJson);
-			const cronChanged = newConf.server.cron !== config.server.cron;
+			const newConf = CommentJSON.parse(confJson);
+			const changed = jsonDiff.diff(config.server, newConf.server) || {};
 			Object.assign(config, newConf);
-			if (cronChanged)
+			if (changed.cron)
 				setupCron();
+			if (changed[SITE_ID] && changed[SITE_ID].searchQueries) {
+				availableQueryStrings.length = 0;
+				availableQueryStrings.push(...config.server[SITE_ID].searchQueries);
+				globalLog.info("Updated search query list: " + JSON.stringify(availableQueryStrings));
+			}
 		}).catch(globalLog.error);
 	});
 

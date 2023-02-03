@@ -7,7 +7,9 @@
   "private": true,
   "dependencies": {
     "chokidar": "^3.5.3",
+    "comment-json": "^4.2.3",
     "dotenv": "^16.0.3",
+    "json-diff": "^1.0.0",
     "node-cron": "^3.0.2",
     "node-fetch": "2",
     "open": "^8.4.0",
@@ -17,6 +19,7 @@
     "winston-daily-rotate-file": "^4.7.1"
   },
   "devDependencies": {
+    "@types/json-diff": "^0.9.1",
     "@types/node-cron": "^3.0.6",
     "@types/node-fetch": "^2.6.2",
     "@types/sharp": "^0.31.1"
