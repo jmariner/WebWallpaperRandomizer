@@ -47,8 +47,9 @@ window.wallpaperPropertyListener = {
 	applyUserProperties: (props) => {
 		if (props.monitor_label) {
 			options.monitorLabel = props.monitor_label.value.trim();
-			if (socket && socket.connected)
-				socket.emit("set label", options.monitorLabel);
+		}
+		if (props.orientation) {
+			options.orientation = props.orientation.value;
 		}
 		if (props.socket_port) {
 			const port = props.socket_port.value;
@@ -77,6 +78,8 @@ window.wallpaperPropertyListener = {
 			for (let i = 1; i <= META_DISPLAY_LEVELS; i++)
 				document.body.classList.toggle(`show-meta-${i}`, level >= i);
 		}
+
+		sendSocketOptions();
 
 		log.debug("Got updates to the following properties: " + Object.keys(props).join(", "));
 	}
@@ -137,6 +140,15 @@ function handleOnlyFavoritesChanged() {
 	CONTROLS_MORE_TOGGLE.checked = false;
 }
 
+function sendSocketOptions() {
+	const optionsToSend = {
+		label: options.monitorLabel,
+		orientation: options.orientation,
+	};
+	if (socket && socket.connected && Object.values(optionsToSend).some(Boolean))
+		socket.emit("set options", optionsToSend);
+}
+
 function setLoading(isLoading) {
 	// TODO on server - on begin request, emit message and set loading=true, on request done (and before waiting buffer time) set loading=false.
 	// if cycle requested during loading buffer, cancel buffer wait and update image right away, instead of making a new request.
@@ -181,9 +193,7 @@ function setup(port) {
 
 	socket.on("connect", () => {
 		setConnectionError(false);
-
-		if (options.monitorLabel)
-			socket.emit("set label", options.monitorLabel);
+		sendSocketOptions();
 	});
 
 	socket.on("connect_error", (err) => {

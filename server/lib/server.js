@@ -8,7 +8,7 @@ const open = require("open");
 const cron = require("node-cron");
 const CommentJSON = require("comment-json");
 const jsonDiff = require("json-diff");
-const { rand, randChoice, doFetch, timeSince, getResizedDim, formatResolution } = require("./utils");
+const { rand, doFetch, timeSince, getResizedDim, formatResolution } = require("./utils");
 const { createLoggerWithID, globalLog, getCurrentLogFile } = require("./logger");
 const favorites = require("./favorites");
 
@@ -16,6 +16,7 @@ const SITE_ID = "wallhaven";
 const API_URL_SEARCH = "https://wallhaven.cc/api/v1/search";
 const API_URL_WALLPAPER_INFO_BASE = "https://wallhaven.cc/api/v1/w/";
 const TARGET_SIZE = [1920, 1080];
+const VALID_ORIENTATIONS = ["landscape", "portrait"];
 const { WALLHAVEN_API_KEY, CONFIG_PATH, FAVORITES_DIR } = process.env;
 
 /** @type {typeof import("../../config.template.json")} */
@@ -47,7 +48,7 @@ let cronTask;
  *
  * @typedef {object} SearchQueryInfo
  * @property {string} siteID
- * @property {string} queryString
+ * @property {string} queryIdentifier
  * @property {string} queryDesc
  * @property {number} resultCount
  * @property {number} pageCount
@@ -90,26 +91,35 @@ async function sendNewWallpaper(socket, skipLoadingBuffer) {
 		availableQueryStrings.sort(() => Math.random() - 0.5);
 	}
 
+	let orientationOption = socket.options?.orientation;
+	if (!VALID_ORIENTATIONS.includes(orientationOption))
+		orientationOption = VALID_ORIENTATIONS[0];
 	const queryString = availableQueryStrings.pop();
 	const query = {
 		...baseQuery,
+		ratios: orientationOption,
 		sorting: "date_added", // static sort order
 		order: "asc", // so newly-added wallpapers appear at end
 		q: queryString,
 		apikey: WALLHAVEN_API_KEY,
 		page: 1,
 	};
+	const queryIdentifier = [queryString, orientationOption].join(";");
 
 	let startLoadTime = performance.now();
 
-	let queryInfoIdx = queryInfoList.findIndex(info => info.siteID === SITE_ID && info.queryString === queryString);
+	let queryInfoIdx = queryInfoList.findIndex(info => (
+		info.siteID === SITE_ID &&
+		info.queryIdentifier === queryIdentifier
+	));
 	if (queryInfoIdx === -1) {
-		socket.log.info(`Fetching info on query "${queryString}"...`);
+		socket.log.info(`Fetching info on query "${queryIdentifier}"...`);
 		const searchResult = await doFetch(API_URL_SEARCH, query);
 		const { meta } = await searchResult.json();
+		/** @type {SearchQueryInfo} */
 		const queryInfo = {
 			siteID: SITE_ID,
-			queryString,
+			queryIdentifier,
 			queryDesc: typeof meta.query === "string" ? meta.query : meta.query.tag || null,
 			pageCount: parseInt(meta.last_page, 10),
 			perPage: parseInt(meta.per_page, 10),
@@ -122,7 +132,7 @@ async function sendNewWallpaper(socket, skipLoadingBuffer) {
 		socket.log.info(`Fetching complete in ${timeSince(startLoadTime)}ms`);
 	}
 	else {
-		socket.log.info(`Got info on query "${queryString}" from cache`);
+		socket.log.info(`Got info on query "${queryIdentifier}" from cache`);
 	}
 
 	const queryInfo = queryInfoList[queryInfoIdx];
@@ -273,12 +283,18 @@ async function setup() {
 		socket.log = createLoggerWithID(socket.id);
 		socket.log.info("Connected");
 
-		sendNewWallpaper(socket, true).catch(socket.log.error);
+		// sendNewWallpaper(socket, true).catch(socket.log.error);
 
-		socket.on("set label", (label) => {
-			if (label.length === 0) return;
-			socket.log.info(`Got new label for socket: "${label}"`);
-			socket.log = createLoggerWithID(socket.id + ":" + label);
+		socket.on("set options", (ops) => {
+			socket.log.info(`Got options for socket: ${JSON.stringify(ops)}`);
+			const { label, orientation } = ops;
+			if (label.length > 0)
+				socket.log = createLoggerWithID(socket.id + ":" + label);
+
+			const changed = socket.options?.orientation !== orientation;
+			socket.options = { orientation };
+			if (changed)
+				sendNewWallpaper(socket, true).catch(socket.log.error);
 		});
 
 		socket.on("cycle", () => {

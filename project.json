@@ -8,8 +8,24 @@
 				"type": "textinput",
 				"value": ""
 			},
-			"socket_port": {
+			"orientation": {
 				"order": 101,
+				"text": "Orientation",
+				"type": "combo",
+				"value": "landscape",
+				"options": [
+					{
+						"label": "Landscape",
+						"value": "landscape"
+					},
+					{
+						"label": "Portrait",
+						"value": "portrait"
+					}
+				]
+			},
+			"socket_port": {
+				"order": 102,
 				"text": "Socket Port",
 				"type": "textinput",
 				"value": "4444"

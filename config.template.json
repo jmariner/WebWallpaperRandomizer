@@ -10,8 +10,7 @@
 			"options": {
 				"categories": "010",
 				"purity": "100",
-				"atleast": "1600x900",
-				"ratios": "landscape"
+				"atleast": "1600x900"
 			}
 		}
 	},
