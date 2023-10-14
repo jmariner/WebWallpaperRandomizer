@@ -91,9 +91,9 @@ async function sendNewWallpaper(socket, skipLoadingBuffer) {
 		availableQueryStrings.sort(() => Math.random() - 0.5);
 	}
 
-	let orientationOption = socket.options?.orientation;
-	if (!VALID_ORIENTATIONS.includes(orientationOption))
-		orientationOption = VALID_ORIENTATIONS[0];
+	const res = socket.options?.resolution;
+	/** @type "landscape" | "portrait" */
+	const orientationOption = res ? (res[0] > res[1] ? "landscape" : "portrait") : VALID_ORIENTATIONS[0];
 	const queryString = availableQueryStrings.pop();
 	const query = {
 		...baseQuery,
@@ -194,17 +194,18 @@ async function sendNewWallpaper(socket, skipLoadingBuffer) {
 	let sharpImg = sharp(imgBuffer);
 	const { width, height } = await sharpImg.metadata();
 	const origRes = [width, height];
+	const targetSize = socket.options?.resolution || TARGET_SIZE;
 	let finalRes = origRes;
-	if (width !== TARGET_SIZE[0] || height !== TARGET_SIZE[1]) {
-		// resize image to 1920x1080 but keep original AR
-		const newSize = getResizedDim(TARGET_SIZE, origRes);
+	if (width !== targetSize[0] || height !== targetSize[1]) {
+		// resize image to target resolution of monitor, but keep original AR
+		const newSize = getResizedDim(targetSize, origRes);
 		sharpImg = sharpImg.resize(newSize[0], newSize[1], {});
 
 		socket.log.info(`Resized image from ${formatResolution(origRes)} to ${formatResolution(newSize)}`);
 		finalRes = newSize;
 	}
 	else {
-		socket.log.info(`Image already at target size (${formatResolution(TARGET_SIZE)})`)
+		socket.log.info(`Image already at target size (${formatResolution(targetSize)})`)
 	}
 
 	wallpaperInfo.origResolution = formatResolution(origRes);
@@ -287,12 +288,12 @@ async function setup() {
 
 		socket.on("set options", (ops) => {
 			socket.log.info(`Got options for socket: ${JSON.stringify(ops)}`);
-			const { label, orientation } = ops;
+			const { label, resolution } = ops;
 			if (label.length > 0)
 				socket.log = createLoggerWithID(socket.id + ":" + label);
 
-			const changed = socket.options?.orientation !== orientation;
-			socket.options = { orientation };
+			const changed = JSON.stringify(socket.options?.resolution) !== JSON.stringify(resolution);
+			socket.options = { resolution };
 			if (changed)
 				sendNewWallpaper(socket, true).catch(socket.log.error);
 		});

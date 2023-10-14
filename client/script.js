@@ -143,7 +143,8 @@ function handleOnlyFavoritesChanged() {
 function sendSocketOptions() {
 	const optionsToSend = {
 		label: options.monitorLabel,
-		orientation: options.orientation,
+		// orientation: options.orientation,
+		resolution: [window.screen.width, window.screen.height],
 	};
 	if (socket && socket.connected && Object.values(optionsToSend).some(Boolean))
 		socket.emit("set options", optionsToSend);
