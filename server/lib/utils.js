@@ -36,6 +36,14 @@ async function doFetch(url, query = {}, ops = {}) {
 	return result;
 }
 
+/** @param {import("node-fetch").Response} resp */
+async function jsonResp(resp) {
+	const contentType = resp.headers.get("content-type");
+	if (!contentType || !contentType.includes("application/json"))
+		throw new Error(`Response is not JSON: "${contentType}"`);
+	return resp.json();
+}
+
 function timeSince(t) {
 	return Math.round(performance.now() - t);
 }
@@ -69,6 +77,7 @@ module.exports = {
 	randChoice,
 	makeURL,
 	doFetch,
+	jsonResp,
 	timeSince,
 	getResizedDim,
 	formatResolution,

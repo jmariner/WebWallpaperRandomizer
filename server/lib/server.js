@@ -8,7 +8,7 @@ const open = require("open");
 const cron = require("node-cron");
 const CommentJSON = require("comment-json");
 const jsonDiff = require("json-diff");
-const { rand, doFetch, timeSince, getResizedDim, formatResolution } = require("./utils");
+const { rand, doFetch, timeSince, getResizedDim, formatResolution, jsonResp } = require("./utils");
 const { createLoggerWithID, globalLog, getCurrentLogFile } = require("./logger");
 const favorites = require("./favorites");
 
@@ -115,7 +115,7 @@ async function sendNewWallpaper(socket, skipLoadingBuffer) {
 	if (queryInfoIdx === -1) {
 		socket.log.info(`Fetching info on query "${queryIdentifier}"...`);
 		const searchResult = await doFetch(API_URL_SEARCH, query);
-		const { meta } = await searchResult.json();
+		const { meta } = await jsonResp(searchResult);
 		/** @type {SearchQueryInfo} */
 		const queryInfo = {
 			siteID: SITE_ID,
@@ -147,7 +147,7 @@ async function sendNewWallpaper(socket, skipLoadingBuffer) {
 		socket.log.info(`Fetching page ${query.page} for wallpaper at index ${randIdx}`);
 
 		const searchResult = await doFetch(API_URL_SEARCH, query);
-		const { data } = await searchResult.json();
+		const { data } = await jsonResp(searchResult);
 
 		const pageStartIdx = (query.page - 1) * queryInfo.perPage;
 		for (let i = 0; i < data.length; i++) {
@@ -166,7 +166,7 @@ async function sendNewWallpaper(socket, skipLoadingBuffer) {
 	startLoadTime = performance.now();
 	socket.log.info(`Fetching info on wallpaper "${wallpaperID}"`);
 	const infoResults = await doFetch(API_URL_WALLPAPER_INFO_BASE + wallpaperID, { apikey: WALLHAVEN_API_KEY })
-	const { data: infoData } = await infoResults.json();
+	const { data: infoData } = await jsonResp(infoResults);
 	socket.log.info(`Fetching complete in ${timeSince(startLoadTime)}ms`);
 
 	const { path: imgURL } = infoData;
